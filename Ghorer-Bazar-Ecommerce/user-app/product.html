@@ -3,181 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details - Ghorer Bazar</title>
+    <title>Product Details - Ghorer Bazar Fashion</title>
     
-    <!-- Google Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
     <link rel="stylesheet" href="assets/css/style.css">
 
-    <!-- Fashion Specific Styling -->
     <style>
         .product-page-wrapper {
-            padding: 20px 0 60px 0;
+            padding: 40px 15px 80px 15px;
+            max-width: 1200px;
+            margin: 0 auto;
             display: grid;
-            grid-template-columns: 50% 50%;
-            gap: 40px;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
         }
 
-        /* Fast Premium Gallery for 4+ Images */
-        .premium-gallery-container { display: flex; flex-direction: row-reverse; gap: 20px; height: 550px;}
-        .main-swiper-container { width: 80%; height: 100%; border-radius: 12px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--border-color); }
-        .main-swiper-container img { width: 100%; height: 100%; object-fit: contain; }
+        .premium-gallery { display: flex; flex-direction: row-reverse; gap: 20px; height: 500px; }
+        .main-img-box { flex: 1; border-radius: 12px; overflow: hidden; background: #fff; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; }
+        .main-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
         
-        .thumb-swiper-container { width: 20%; height: 100%; }
-        .thumb-item-premium { width: 100%; height: 90px; margin-bottom: 10px; border-radius: 8px; border: 2px solid transparent; overflow: hidden; cursor: pointer; }
-        .thumb-item-premium img { width: 100%; height: 100%; object-fit: cover; }
-        .thumb-item-premium.active { border-color: var(--primary-color); }
+        .thumb-box { width: 90px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+        .thumb-box::-webkit-scrollbar { width: 0; } 
+        
+        .thumb-img { width: 100%; height: 90px; border-radius: 8px; border: 2px solid transparent; overflow: hidden; cursor: pointer; flex-shrink: 0; background: #fff; transition: 0.3s;}
+        .thumb-img img { width: 100%; height: 100%; object-fit: cover; }
+        .thumb-img.active { border-color: var(--text-main); }
+        .thumb-img:hover { filter: brightness(0.9); }
 
-        /* Content Information Setup */
         .info-panel { display: flex; flex-direction: column; }
-        .info-panel .cat-name { color: var(--primary-color); font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1.5px; margin-bottom: 8px;}
-        .info-panel .product-title { font-size: 2.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 15px; line-height: 1.3;}
-        .info-panel .price-box { margin-bottom: 25px; display: flex; align-items: baseline; gap: 15px; }
-        .info-panel .price-box .price { font-size: 2rem; color: var(--danger); font-weight: 700; }
-        .info-panel .price-box .old-price { font-size: 1.2rem; text-decoration: line-through; color: var(--text-muted); }
-
-        /* Variant Selectors: Size & Color */
-        .variant-section { margin-bottom: 25px; }
-        .variant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .variant-header label { font-size: 1.1rem; font-weight: 600; color: var(--text-main); }
-        .selected-variant-text { color: var(--text-muted); font-size: 0.95rem; }
+        .cat-name { color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px;}
+        .title { font-size: 2rem; font-weight: 700; margin: 10px 0; color: var(--text-main); line-height: 1.3;}
         
-        .options-flex { display: flex; gap: 10px; flex-wrap: wrap; }
+        .price-row { display: flex; align-items: baseline; gap: 15px; margin-bottom: 30px; }
+        .price { font-size: 2.2rem; font-weight: 700; color: var(--primary-color); }
+        .old-price { font-size: 1.2rem; text-decoration: line-through; color: var(--text-muted); }
+
+        .variant-box { margin-bottom: 25px; }
+        .variant-box label { display: block; font-weight: 600; margin-bottom: 12px; font-size: 1rem;}
+        .variant-list { display: flex; flex-wrap: wrap; gap: 12px; }
         
-        /* Sizes Box */
-        .size-btn-modern { width: 55px; height: 55px; border: 2px solid #ddd; background: #fff; color: var(--text-main); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        .size-btn-modern:hover { border-color: var(--text-main); }
-        .size-btn-modern.active { background: var(--text-main); color: #fff; border-color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-        .size-btn-modern.disabled { background: #f9f9f9; color: #ccc; border-color: #eee; cursor: not-allowed; text-decoration: line-through; }
+        .select-btn { border: 2px solid #e0e0e0; background: #fff; padding: 10px 22px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 1.05rem; }
+        .select-btn:hover:not(.disabled) { border-color: var(--text-main); }
+        .select-btn.active { background: var(--text-main); color: #fff; border-color: var(--text-main); }
+        .select-btn.disabled { background: #f9f9f9; color: #c4c4c4; border-color: #eee; cursor: not-allowed; text-decoration: line-through; }
         
-        /* Color Box */
-        .color-btn-modern { padding: 10px 20px; border: 2px solid #ddd; background: #fff; color: var(--text-main); border-radius: 30px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 1rem; }
-        .color-btn-modern:hover { border-color: var(--text-main); }
-        .color-btn-modern.active { background: var(--text-main); color: #fff; border-color: var(--text-main); }
+        .color-btn { border-radius: 30px; } 
 
-        /* Status & Quantity */
-        .status-badge-live { display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-bottom: 30px; background: rgba(0,0,0,0.04); padding: 8px 15px; border-radius: 6px; }
-
-        /* Primary Action Buttons Matrix */
-        .cart-action-matrix { display: flex; gap: 15px; margin-bottom: 40px; }
-        .qty-controls { display: flex; align-items: center; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; width: 130px;}
-        .qty-controls button { width: 40px; height: 50px; background: #fff; border: none; font-size: 1.5rem; cursor: pointer; }
-        .qty-controls input { width: 50px; height: 50px; border: none; text-align: center; font-size: 1.1rem; font-weight: 700; background: #fff;}
+        .status-msg { margin-bottom: 25px; font-size: 0.95rem; font-weight: 500; display: inline-flex; align-items: center; gap: 10px; padding: 10px 15px; border-radius: 8px; background: rgba(46, 125, 50, 0.1); color: var(--primary-color); border: 1px dashed var(--primary-light);}
         
-        .huge-action-btn { flex: 1; height: 54px; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px;}
-        .btn-black-cart { background: #111; color: #fff; }
-        .btn-black-cart:hover { background: #333; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
-        .btn-theme-buy { background: var(--primary-color); color: #fff; }
-        .btn-theme-buy:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(46, 125, 50, 0.3); }
+        .action-flex { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;}
+        .qty-controls { display: flex; align-items: center; border: 2px solid #e0e0e0; border-radius: 8px; height: 55px; background: #fff;}
+        .qty-controls button { width: 50px; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; font-weight: bold;}
+        .qty-controls input { width: 50px; text-align: center; border: none; font-weight: bold; font-size: 1.2rem; outline: none;}
 
-        /* Description Minimal Area */
-        .desc-box { padding: 25px 0; border-top: 1px solid var(--border-color); }
-        .desc-box h4 { margin-bottom: 15px; font-size: 1.3rem; }
-        .desc-box p { color: #555; line-height: 1.8; font-size: 0.95rem; }
+        .btn-add { flex: 1; border: 2px solid var(--text-main); color: var(--text-main); background: #fff; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 1.1rem;}
+        .btn-add:hover { background: var(--text-main); color: #fff; }
+        
+        .btn-buy { width: 100%; height: 55px; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: 0.3s;}
+        .btn-buy:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3); }
 
-        /* Mobile specific re-design */
-        @media (max-width: 992px) {
+        .desc-box { border-top: 1px solid var(--border-color); padding-top: 25px; margin-top: 30px; }
+        .desc-box h4 { margin-bottom: 10px; font-size: 1.3rem; }
+        .desc-box p { color: var(--text-muted); line-height: 1.8; font-size: 1rem; }
+
+        @media(max-width: 992px){
             .product-page-wrapper { grid-template-columns: 1fr; gap: 20px; }
-            .premium-gallery-container { flex-direction: column; height: auto; gap:10px; }
-            .main-swiper-container { width: 100%; height: 400px; }
-            .thumb-swiper-container { width: 100%; height: auto; display: flex; overflow-x: auto; gap: 10px;}
-            .thumb-item-premium { width: 80px; flex-shrink: 0; }
-            .info-panel .product-title { font-size: 1.6rem; }
-            .cart-action-matrix { flex-wrap: wrap; }
-            .huge-action-btn { width: 100%; flex: auto;}
+            .premium-gallery { flex-direction: column; height: auto; }
+            .main-img-box { height: 400px; }
+            .thumb-box { flex-direction: row; height: auto; width: 100%;}
+            .action-flex { flex-direction: column; }
+            .qty-controls { width: 100%; justify-content: space-between; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header Setup -->
+    <!-- Header Panel -->
     <header class="header">
         <div class="container navbar">
             <div class="logo"><a href="index.html"><h2>Ghorer<span>Bazar</span></h2></a></div>
-            <div class="nav-icons"><a href="cart.html" class="icon-link"><i class="fas fa-shopping-bag"></i></a></div>
+            <div class="nav-icons">
+                <a href="cart.html" class="icon-link"><i class="fas fa-shopping-bag"></i></a>
+            </div>
         </div>
     </header>
 
+    <!-- Page Content Container -->
     <main class="container">
         
-        <!-- Center Loading Graphic -->
-        <div id="product-loading" style="text-align:center; padding: 100px 20px; font-size: 1.3rem; color: #888;">
-            <i class="fas fa-circle-notch fa-spin"></i> Loading Trendy Details...
+        <div id="loading-box" style="text-align: center; padding: 100px 0; color: var(--text-muted);">
+            <i class="fas fa-spinner fa-spin" style="font-size: 3rem;"></i>
         </div>
 
-        <div class="product-page-wrapper" id="product-content" style="display: none;">
+        <div class="product-page-wrapper" id="content-box" style="display: none;">
             
-            <!-- Left Side: Fast Smooth Images Matrix -->
-            <div class="premium-gallery-container">
-                <div class="main-swiper-container">
-                    <img id="main-image" src="" alt="Clothing Preview">
+            <!-- Product Gallery -->
+            <div class="premium-gallery">
+                <div class="main-img-box">
+                    <img id="main-image" src="" alt="Main Fashion Display">
                 </div>
-                <!-- Support for infinite/10+ uploads thumbnails natively -->
-                <div class="thumb-swiper-container" id="thumb-gallery">
-                    <!-- Populated dynamically via JS -->
-                </div>
+                <div class="thumb-box" id="thumb-container"></div>
             </div>
 
-            <!-- Right Side: Interactive Data Selection & Cart logic -->
+            <!-- Details Panel -->
             <div class="info-panel">
-                <div class="cat-name" id="pd-category">CLOTHING & APPAREL</div>
-                <h1 class="product-title" id="pd-title">Fashionable Comfort Apparel</h1>
+                <div class="cat-name" id="product-cat">CLOTHING</div>
+                <h1 class="title" id="product-title">Loading...</h1>
                 
-                <div class="price-box">
-                    <div class="price" id="pd-price">৳0</div>
-                    <div class="old-price" id="pd-old-price" style="display: none;">৳0</div>
+                <div class="price-row">
+                    <span class="price" id="product-price">৳0</span>
+                    <span class="old-price" id="product-oldPrice" style="display:none;">৳0</span>
                 </div>
 
-                <!-- Variant Selection #1: SIZES -->
-                <div class="variant-section">
-                    <div class="variant-header">
-                        <label>1. Select Size</label>
-                        <span class="selected-variant-text" id="selected-size-text">None</span>
-                    </div>
-                    <div class="options-flex" id="size-options-container">
-                        <!-- Populated by JS based on actual Stock! -->
-                    </div>
+                <!-- Colors Selection -->
+                <div class="variant-box">
+                    <label>Choose Color:</label>
+                    <div class="variant-list" id="color-options"></div>
                 </div>
 
-                <!-- Variant Selection #2: COLORS (New Added Module) -->
-                <div class="variant-section">
-                    <div class="variant-header">
-                        <label>2. Choose Color</label>
-                        <span class="selected-variant-text" id="selected-color-text">None</span>
-                    </div>
-                    <div class="options-flex" id="color-options-container">
-                        <!-- Standard specific text-box pill styling for clarity across diverse fashion models -->
-                    </div>
+                <!-- Sizes Selection -->
+                <div class="variant-box">
+                    <label>Select Size:</label>
+                    <div class="variant-list" id="size-options"></div>
                 </div>
 
-                <!-- Simple Notification text acting on combined choices-->
-                <div class="status-badge-live" id="live-stock-text">
-                    <i class="fas fa-info-circle"></i> Pick a Size and Color
+                <div class="status-msg" id="stock-notice">
+                    <i class="fas fa-info-circle"></i> Please select Color & Size.
                 </div>
 
-                <!-- Dynamic Functional Control Board-->
-                <div class="cart-action-matrix">
+                <!-- Add to Cart / Order Area -->
+                <div class="action-flex">
                     <div class="qty-controls">
-                        <button id="pd-qty-minus">-</button>
-                        <input type="number" id="pd-qty-input" value="1" min="1" readonly>
-                        <button id="pd-qty-plus">+</button>
+                        <button id="btn-minus">-</button>
+                        <input type="number" id="qty-input" value="1" readonly>
+                        <button id="btn-plus">+</button>
                     </div>
-                    <button class="huge-action-btn btn-black-cart" id="btn-add-to-cart">
-                        <i class="fas fa-shopping-cart"></i> Add to Bag
-                    </button>
-                    <button class="huge-action-btn btn-theme-buy" id="btn-buy-now">
-                        <i class="fas fa-bolt"></i> Buy Now
-                    </button>
+                    <button class="btn-add" id="btn-add-cart">Add To Bag</button>
                 </div>
+                <button class="btn-buy" id="btn-buy-now">Order Now</button>
 
-                <!-- Extensive Detailed Clothing Content Data Info Bottom Placement -->
+                <!-- Description -->
                 <div class="desc-box">
-                    <h4>Product Description</h4>
-                    <p id="tab-desc">Information processing...</p>
+                    <h4>Description</h4>
+                    <p id="product-desc"></p>
                 </div>
-
             </div>
         </div>
 
