@@ -2,279 +2,268 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { doc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// --- GET URL PARAMS ---
-const urlParams = new URLSearchParams(window.location.search);
-const productId = urlParams.get('id');
+// DOM Elements
+const loadingBox = document.getElementById('loading-box');
+const contentBox = document.getElementById('content-box');
+const mainImg = document.getElementById('main-image');
+const qtyInput = document.getElementById('qty-input');
+const stockNotice = document.getElementById('stock-notice');
 
-// --- DOM ELEMENTS ---
-const loadingUi = document.getElementById('loading-ui');
-const contentUi = document.getElementById('content-ui');
-const mainImage = document.getElementById('main-image');
-const qtyInput = document.getElementById('qty-val');
-const stockStatusText = document.getElementById('stock-status');
-
-// --- STATE VARIABLES ---
+// States
 let currentProduct = null;
-let currentUser = null;
-let selectedQty = 1;
+let sessionUser = null;
+let currentQty = 1;
 let selectedColor = null;
 let selectedSize = null;
 
-// Ensure authentication listener active
-onAuthStateChanged(auth, (user) => currentUser = user);
+// Auth check
+onAuthStateChanged(auth, (user) => {
+    sessionUser = user;
+});
 
-// Load Product on boot
+// URL ID get
+const urlParams = new URLSearchParams(window.location.search);
+const productId = urlParams.get('id');
+
 if (!productId) {
     window.location.href = 'index.html';
 } else {
-    fetchProduct();
+    loadData(productId);
 }
 
-async function fetchProduct() {
+// Fetch DB Function
+async function loadData(id) {
     try {
-        const productRef = doc(db, "products", productId);
-        const docSnap = await getDoc(productRef);
+        const productRef = doc(db, "products", id);
+        const snapshot = await getDoc(productRef);
 
-        if (docSnap.exists()) {
-            currentProduct = { id: docSnap.id, ...docSnap.data() };
-            // Ensure compatibility variables
-            if(!currentProduct.sizes) currentProduct.sizes = { S:0, M:0, L:0, XL:0, XXL:0 };
-            if(!currentProduct.colors) currentProduct.colors = ['Default Color'];
+        if (snapshot.exists()) {
+            currentProduct = { id: snapshot.id, ...snapshot.data() };
             
-            renderProductPage(currentProduct);
+            // Fashion properties mapping if missing
+            if (!currentProduct.colors) currentProduct.colors = ['Original'];
+            if (!currentProduct.sizes) currentProduct.sizes = { S:0, M:0, L:0, XL:0, XXL:0 };
+            
+            renderData(currentProduct);
         } else {
-            Swal.fire('Lost Item', 'This item was removed from the store.', 'error').then(()=> window.location.href = 'index.html');
+            Swal.fire('Out of Stock', 'Product not found', 'error').then(()=> window.location.href='index.html');
         }
-    } catch (error) {
-        console.error("Error Fetching Data:", error);
-        loadingUi.innerHTML = "<h3 style='color:red;'>Connection Error. Reload the page.</h3>";
+    } catch (e) {
+        console.error(e);
+        loadingBox.innerHTML = "<h3 style='color:red;'>Failed to connect database.</h3>";
     }
 }
 
-function renderProductPage(product) {
-    loadingUi.style.display = 'none';
-    contentUi.style.display = 'grid';
+// UI Mapping
+function renderData(data) {
+    loadingBox.style.display = 'none';
+    contentBox.style.display = 'grid';
 
-    // Texts
-    document.getElementById('product-category').innerText = product.categoryName || 'Apparel';
-    document.getElementById('product-title').innerText = product.name;
-    document.getElementById('product-price').innerText = `৳${product.price}`;
-    document.getElementById('product-desc').innerHTML = (product.description || 'No description provided').replace(/\n/g, '<br>');
-
-    // Build Gallery Fast & Safe
-    let imagesArr = product.images && product.images.length > 0 ? product.images : ['assets/images/placeholder.jpg'];
-    mainImage.src = imagesArr[0];
+    document.getElementById('product-cat').innerText = data.categoryName || 'Apparel';
+    document.getElementById('product-title').innerText = data.name;
+    document.getElementById('product-price').innerText = `৳${data.price}`;
     
-    let thumbHTML = '';
-    imagesArr.forEach((imgLink, i) => {
-        let activeClass = i === 0 ? 'active' : '';
-        thumbHTML += `
-            <div class="thumb-img ${activeClass}" data-src="${imgLink}">
-                <img src="${imgLink}">
+    if (data.oldPrice && data.oldPrice > data.price) {
+        document.getElementById('product-oldPrice').innerText = `৳${data.oldPrice}`;
+        document.getElementById('product-oldPrice').style.display = 'inline-block';
+    }
+
+    document.getElementById('product-desc').innerHTML = (data.description || '').replace(/\n/g, '<br>');
+
+    // Gallery Render
+    let imagesList = (data.images && data.images.length > 0) ? data.images : ['assets/images/placeholder.jpg'];
+    mainImg.src = imagesList[0];
+    
+    let thumbsHtml = '';
+    imagesList.forEach((srcLink, idx) => {
+        let active = idx === 0 ? 'active' : '';
+        thumbsHtml += `
+            <div class="thumb-img ${active}" data-src="${srcLink}">
+                <img src="${srcLink}">
             </div>`;
     });
-    const thumbCon = document.getElementById('thumb-container');
-    thumbCon.innerHTML = thumbHTML;
+    document.getElementById('thumb-container').innerHTML = thumbsHtml;
 
-    // Attach click events to thumbs
-    const allThumbs = document.querySelectorAll('.thumb-img');
-    allThumbs.forEach(thumb => {
-        thumb.addEventListener('click', (e) => {
-            allThumbs.forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.thumb-img').forEach(tBox => {
+        tBox.addEventListener('click', (e) => {
+            document.querySelectorAll('.thumb-img').forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
-            mainImage.src = e.currentTarget.getAttribute('data-src');
+            mainImg.src = e.currentTarget.getAttribute('data-src');
         });
     });
 
-    renderColorOptions();
-    renderSizeOptions();
+    renderVariants();
     setupButtons();
 }
 
-// COLORS Render
-function renderColorOptions() {
-    let colors = currentProduct.colors;
-    if (typeof colors === 'string') {
-        colors = colors.split(',').map(c => c.trim()); // For text input splits
-    }
+// Draw Size & Colors
+function renderVariants() {
+    // Render Colors
+    let rawColors = currentProduct.colors;
+    if(typeof rawColors === 'string') rawColors = rawColors.split(',').map(s=>s.trim());
     
-    let html = '';
-    colors.forEach(col => {
-        if(col) html += `<div class="select-btn color-btn" data-color="${col}">${col}</div>`;
+    let cHtml = '';
+    rawColors.forEach(c => {
+        if(c) cHtml += `<div class="select-btn color-btn" data-color="${c}">${c}</div>`;
     });
-    document.getElementById('color-options').innerHTML = html;
+    document.getElementById('color-options').innerHTML = cHtml;
 
-    const btns = document.querySelectorAll('.color-btn');
-    btns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            btns.forEach(b => b.classList.remove('active'));
+    // Attach click to colors
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('active'));
             e.currentTarget.classList.add('active');
             selectedColor = e.currentTarget.getAttribute('data-color');
-            checkStockMessage();
+            checkInventory();
         });
     });
 
-    // Auto-select if only 1 color exists
-    if(btns.length === 1) btns[0].click();
-}
+    // Auto click color if only one exists
+    const colorBtnElements = document.querySelectorAll('.color-btn');
+    if(colorBtnElements.length === 1) colorBtnElements[0].click();
 
-// SIZES Render (Depends on DB exact Stock integer)
-function renderSizeOptions() {
-    const sizeMap = currentProduct.sizes; // Looks like { M: 5, L: 0, XL: 2 }
-    let html = '';
-    
-    // Common sizes for Clothing 
-    const orderedSizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
-    orderedSizes.forEach(s => {
-        const availableStock = parseInt(sizeMap[s] || 0);
-        let outStockClass = availableStock <= 0 ? 'out-of-stock' : '';
-
-        html += `<div class="select-btn size-btn ${outStockClass}" data-size="${s}" data-stock="${availableStock}">${s}</div>`;
+    // Render Sizes based on Stock
+    const standardSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+    let sHtml = '';
+    standardSizes.forEach(sz => {
+        let stkLimit = parseInt(currentProduct.sizes[sz] || 0);
+        let blockClass = stkLimit > 0 ? '' : 'disabled';
+        sHtml += `<div class="select-btn size-btn ${blockClass}" data-size="${sz}" data-max="${stkLimit}">${sz}</div>`;
     });
+    document.getElementById('size-options').innerHTML = sHtml;
 
-    document.getElementById('size-options').innerHTML = html;
-
-    const btns = document.querySelectorAll('.size-btn');
-    btns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const btnTarget = e.currentTarget;
-            if(btnTarget.classList.contains('out-of-stock')) return; // Ignore click
-
-            btns.forEach(b => b.classList.remove('active'));
-            btnTarget.classList.add('active');
+    // Attach click to sizes
+    document.querySelectorAll('.size-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            let el = e.currentTarget;
+            if(el.classList.contains('disabled')) return;
             
-            selectedSize = btnTarget.getAttribute('data-size');
+            document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
+            el.classList.add('active');
+            selectedSize = el.getAttribute('data-size');
             
-            // Validate Quantity against newly selected Size Max-Limit
-            let maxLimit = parseInt(btnTarget.getAttribute('data-stock'));
-            if(selectedQty > maxLimit) {
-                selectedQty = 1;
-                qtyInput.value = 1;
+            // Adjust running qty to size max bound
+            let szMax = parseInt(el.getAttribute('data-max'));
+            if(currentQty > szMax) {
+                currentQty = 1; 
+                qtyInput.value = currentQty;
             }
-            
-            checkStockMessage();
+            checkInventory();
         });
     });
 }
 
-function checkStockMessage() {
-    if (selectedColor && selectedSize) {
-        let maxLimit = parseInt(currentProduct.sizes[selectedSize] || 0);
-        stockStatusText.innerHTML = `<span style="color:#2e7d32;"><i class="fas fa-check-circle"></i> We have <b>${maxLimit} in stock</b> for [${selectedSize}, ${selectedColor}]</span>`;
-    } else {
-        stockStatusText.innerHTML = `<span style="color:#777;"><i class="fas fa-info-circle"></i> Select Size & Color to add to cart</span>`;
+function checkInventory() {
+    if(selectedSize && selectedColor) {
+        let maxAvailable = parseInt(currentProduct.sizes[selectedSize] || 0);
+        stockNotice.innerHTML = `<div><i class="fas fa-check-circle"></i> Excellent! We have ${maxAvailable} available.</div>`;
     }
 }
 
-// Handlers for Add To Cart & Order Now
+// User Actions Controller
 function setupButtons() {
-    document.getElementById('qty-plus').addEventListener('click', () => {
-        if (!selectedSize) {
-            Swal.fire('Oops!', 'Select your Size first!', 'info'); return;
-        }
-        let maxLimit = parseInt(currentProduct.sizes[selectedSize]);
-        if(selectedQty < maxLimit) {
-            selectedQty++;
-            qtyInput.value = selectedQty;
+    // Plus
+    document.getElementById('btn-plus').addEventListener('click', () => {
+        if(!selectedSize) { Swal.fire('Select Size', 'Please click a size block first.', 'info'); return; }
+        
+        let stockMaxLimit = parseInt(currentProduct.sizes[selectedSize] || 0);
+        if (currentQty < stockMaxLimit) {
+            currentQty++;
+            qtyInput.value = currentQty;
         } else {
-            Swal.fire('Limit Alert', `Only ${maxLimit} pieces available right now.`, 'warning');
+            Swal.fire('Limit Reached', `Only ${stockMaxLimit} unit(s) left in stock for size ${selectedSize}`, 'warning');
         }
     });
 
-    document.getElementById('qty-minus').addEventListener('click', () => {
-        if (selectedQty > 1) {
-            selectedQty--;
-            qtyInput.value = selectedQty;
+    // Minus
+    document.getElementById('btn-minus').addEventListener('click', () => {
+        if (currentQty > 1) {
+            currentQty--;
+            qtyInput.value = currentQty;
         }
     });
 
-    // Submits
-    document.getElementById('btn-cart').addEventListener('click', () => processOrderAddition(false));
-    document.getElementById('btn-buy').addEventListener('click', () => processOrderAddition(true));
+    document.getElementById('btn-add-cart').addEventListener('click', () => pushDataToCartDB(false));
+    document.getElementById('btn-buy-now').addEventListener('click', () => pushDataToCartDB(true));
 }
 
-// Finally Process The Real Action safely
-async function processOrderAddition(goToCheckoutDirectly) {
-    // 1. User Safety Log
-    if(!currentUser) {
-        Swal.fire({
-            title: 'Please Login',
-            text: 'You must login before adding fashion items to your cart.',
-            icon: 'info',
-            confirmButtonText: 'Go to Login'
-        }).then(r => {
-            if(r.isConfirmed) window.location.href='login.html';
+async function pushDataToCartDB(redirectDirectly) {
+    if(!sessionUser) {
+        Swal.fire({icon: 'info', title: 'Login', text:'Login to secure your outfit selection.'}).then(r=> {
+            if(r.isConfirmed) window.location.href = 'login.html';
         });
         return;
     }
-
-    // 2. Validate Variant Checks
     if(!selectedSize || !selectedColor) {
-        Swal.fire('Select Options', 'Please ensure you selected a COLOR and a SIZE to proceed.', 'error');
+        Swal.fire('Incomplete', 'Please select both COLOR and SIZE variations!', 'error');
         return;
     }
 
     try {
-        const primaryBtnId = goToCheckoutDirectly ? 'btn-buy' : 'btn-cart';
-        document.getElementById(primaryBtnId).innerHTML = 'Loading...';
-        
-        // Find if this specific cart variant exists using Composite Queries
-        const cartRef = collection(db, "cart");
-        const queryMatches = query(cartRef, 
-            where("userId", "==", currentUser.uid),
+        const domTargetBtn = document.getElementById(redirectDirectly ? 'btn-buy-now' : 'btn-add-cart');
+        domTargetBtn.innerText = 'Working...';
+        domTargetBtn.disabled = true;
+
+        // Checking existing exact composite document via standard JS logic without glitches
+        const collRef = collection(db, "cart");
+        const compositeFindQuery = query(collRef, 
+            where("userId", "==", sessionUser.uid), 
             where("productId", "==", currentProduct.id),
             where("size", "==", selectedSize),
             where("color", "==", selectedColor)
         );
 
-        const snapshotData = await getDocs(queryMatches);
-        const imageUrlToSave = (currentProduct.images && currentProduct.images.length > 0) ? currentProduct.images[0] : 'assets/images/placeholder.jpg';
+        const dataResponse = await getDocs(compositeFindQuery);
+        let finalDisplayPic = (currentProduct.images && currentProduct.images.length>0) ? currentProduct.images[0] : 'assets/images/placeholder.jpg';
 
-        if (!snapshotData.empty) {
-            // Already exist exactly as that size & color -> ADD Quantity together!
-            let activeDocRef = snapshotData.docs[0];
-            let mathQuantity = activeDocRef.data().quantity + selectedQty;
+        if(!dataResponse.empty) {
+            const documentTargetRef = dataResponse.docs[0];
+            let activeDbValueQty = documentTargetRef.data().quantity;
+            let sumNewCalc = activeDbValueQty + currentQty;
             
-            // Do not cross stock rules!
-            const limit = parseInt(currentProduct.sizes[selectedSize]);
-            if(mathQuantity > limit) {
-                Swal.fire('Limit Overload', `You are trying to cart ${mathQuantity}, but only ${limit} exist!`, 'warning');
-                document.getElementById(primaryBtnId).innerHTML = goToCheckoutDirectly ? 'Order Now' : '<i class="fas fa-shopping-cart"></i> Add to Cart';
+            let safeStockMaxForSpecificVarient = parseInt(currentProduct.sizes[selectedSize]);
+            if(sumNewCalc > safeStockMaxForSpecificVarient) {
+                Swal.fire('Maxed Out!', `Cannot add more. Limit is ${safeStockMaxForSpecificVarient} pieces overall per person on this stock!`, 'warning');
+                domTargetBtn.innerText = redirectDirectly ? 'Order Now' : 'Add To Bag';
+                domTargetBtn.disabled = false;
                 return;
             }
 
-            await updateDoc(doc(db, "cart", activeDocRef.id), { quantity: mathQuantity });
+            await updateDoc(doc(db, "cart", documentTargetRef.id), { quantity: sumNewCalc });
         } else {
-            // Generate Complete New Item 
-            await addDoc(cartRef, {
-                userId: currentUser.uid,
+            await addDoc(collRef, {
+                userId: sessionUser.uid,
                 productId: currentProduct.id,
                 name: currentProduct.name,
                 price: currentProduct.price,
-                image: imageUrlToSave,
-                quantity: selectedQty,
-                size: selectedSize,    // Explicit clothing saving rule
-                color: selectedColor,  // Explicit clothing saving rule
+                size: selectedSize,
+                color: selectedColor,
+                image: finalDisplayPic,
+                quantity: currentQty,
                 addedAt: serverTimestamp()
             });
         }
 
-        if(goToCheckoutDirectly) {
+        if(redirectDirectly) {
             window.location.href = 'cart.html';
         } else {
             Swal.fire({
-                icon: 'success', 
-                title: 'Cart Updated!',
-                html: `Size: <b>${selectedSize}</b> & Color: <b>${selectedColor}</b> saved securely.`,
-                toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
+                icon: 'success',
+                title: 'Done',
+                text: 'Successfully inserted to cart collection!',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000
             });
-            document.getElementById('btn-cart').innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
+            domTargetBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Added!';
+            domTargetBtn.disabled = false;
+            setTimeout(()=>{ domTargetBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart'; }, 2000);
         }
-
-    } catch(errorsObj) {
-        Swal.fire("Add Process Failed", errorsObj.message, "error");
-        document.getElementById('btn-buy').innerHTML = 'Order Now';
-        document.getElementById('btn-cart').innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
+    } catch(errOutputSafeView){
+        console.error(errOutputSafeView);
+        Swal.fire('Database Err', errOutputSafeView.message, 'error');
+        document.getElementById(redirectDirectly ? 'btn-buy-now' : 'btn-add-cart').disabled = false;
     }
 }
