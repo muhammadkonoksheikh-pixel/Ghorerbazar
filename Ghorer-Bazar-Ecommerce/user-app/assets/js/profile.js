@@ -52,28 +52,39 @@ async function loadUserData(uid) {
             const data = docSnap.data();
             
             // Populate Sidebar
-            sidebarName.innerText = data.name || 'User';
+            sidebarName.innerText = data.name || auth.currentUser.displayName || 'User';
             sidebarEmail.innerText = data.email || auth.currentUser.email;
             if(data.photoURL) sidebarPhoto.src = data.photoURL;
 
             // Populate Profile Fields
-            formName.value = data.name || '';
-            formEmail.value = data.email || auth.currentUser.email;
+            formName.value = data.name || auth.currentUser.displayName || '';
+            formEmail.value = data.email || auth.currentUser.email || '';
             formPhone.value = data.phone || '';
             formDistrict.value = data.district || '';
             formUpazila.value = data.upazila || '';
             formAddress.value = data.address || '';
         } else {
-            // Fallback setup if Firestore user document does not exist yet
-            sidebarName.innerText = auth.currentUser.displayName || 'Ghorer Bazar User';
-            sidebarEmail.innerText = auth.currentUser.email;
-            formName.value = auth.currentUser.displayName || '';
-            formEmail.value = auth.currentUser.email || '';
+            // Fallback if document doesn't exist yet but user is logged in
+            applyFallbackData();
         }
     } catch (error) {
         console.error("Error loading user profile:", error);
-        Swal.fire('Error', 'Failed to retrieve profile data from server.', 'error');
+        
+        // If Firestore rules deny access, show a clear message
+        if(error.code === 'permission-denied') {
+            Swal.fire('Database Locked', 'Please update your Firestore Security Rules to allow access.', 'error');
+        }
+        
+        // Apply fallback data so the page isn't stuck on "Loading..."
+        applyFallbackData();
     }
+}
+
+function applyFallbackData() {
+    sidebarName.innerText = auth.currentUser.displayName || 'Ghorer Bazar User';
+    sidebarEmail.innerText = auth.currentUser.email || 'user@example.com';
+    formName.value = auth.currentUser.displayName || '';
+    formEmail.value = auth.currentUser.email || '';
 }
 
 // Update profile details handler
@@ -106,7 +117,11 @@ if (profileForm) {
             });
         } catch (error) {
             console.error("Error updating profile:", error);
-            Swal.fire('Update Failed', error.message, 'error');
+            if(error.code === 'permission-denied') {
+                Swal.fire('Update Failed', 'Permission denied. Check Firestore Rules.', 'error');
+            } else {
+                Swal.fire('Update Failed', error.message, 'error');
+            }
         } finally {
             btn.innerHTML = 'Save Changes';
             btn.disabled = false;
