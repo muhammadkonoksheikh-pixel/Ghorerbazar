@@ -1,43 +1,68 @@
-import { auth, db } from './firebase-config.js';
+import { app, auth } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-// Check if we are on the login page
+// Check if current page is the login page
 const isLoginPage = window.location.pathname.includes('login.html');
+
+// Initialize Realtime Database Instance using existing app
+const database = getDatabase(app);
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        // User is signed in, verify if admin
-        try {
-            const adminDoc = await getDoc(doc(db, "admins", user.uid));
-            
-            if (adminDoc.exists()) {
-                // User is an admin
-                if (isLoginPage) {
-                    window.location.href = 'dashboard.html';
-                } else {
-                    // Update profile info in topbar if elements exist
-                    const adminNameEl = document.getElementById('admin-name');
-                    if (adminNameEl) {
-                        adminNameEl.innerText = adminDoc.data().name || user.email;
-                    }
-                }
+        // 1. CHECK RULE 1: If it's your primary admin email, allow access instantly
+        if (user.email === 'admin@ghorerbazar.com') {
+            if (isLoginPage) {
+                window.location.href = 'dashboard.html';
             } else {
-                // Not an admin
-                await signOut(auth);
-                if (!isLoginPage) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Access Denied',
-                        text: 'You do not have administrative privileges.'
-                    }).then(() => {
-                        window.location.href = 'login.html';
-                    });
+                // Update profile info in topbar
+                const adminNameEl = document.getElementById('admin-name');
+                if (adminNameEl) {
+                    adminNameEl.innerText = "Super Admin";
                 }
             }
+            return; // Exit checking since primary admin is always valid
+        }
+
+        // 2. CHECK RULE 2: Fallback to Realtime Database verification for other admins
+        try {
+            const dbRef = ref(database);
+            const snapshot = await get(child(dbRef, `admins/${user.uid}`));
+            
+            if (snapshot.exists()) {
+                const adminData = snapshot.val();
+                
+                if (adminData.role === 'admin') {
+                    // Valid Admin User
+                    if (isLoginPage) {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        // Update profile info in topbar
+                        const adminNameEl = document.getElementById('admin-name');
+                        if (adminNameEl) {
+                            adminNameEl.innerText = adminData.name || user.email;
+                        }
+                    }
+                } else {
+                    throw new Error("Access Denied: Invalid admin role.");
+                }
+            } else {
+                throw new Error("Access Denied: UID not found in Realtime Database.");
+            }
         } catch (error) {
-            console.error("Error verifying admin:", error);
-            if (!isLoginPage) window.location.href = 'login.html';
+            console.error("Error verifying admin credentials:", error);
+            
+            // Log out unauthorized attempts
+            await signOut(auth);
+            if (!isLoginPage) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Access Denied',
+                    text: 'You do not have administrative privileges.'
+                }).then(() => {
+                    window.location.href = 'login.html';
+                });
+            }
         }
     } else {
         // No user signed in
@@ -47,7 +72,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// Logout functionality
+// Logout action listener
 document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('admin-logout-btn');
     if (logoutBtn) {
