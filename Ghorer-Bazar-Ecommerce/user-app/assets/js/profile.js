@@ -44,7 +44,10 @@ onAuthStateChanged(auth, async (user) => {
 async function loadUserData(uid) {
     try {
         const docRef = doc(db, "users", uid);
-        const docSnap = await getDoc(docRef);
+        
+        // 5 Second Timeout for Loading Data
+        const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), 5000));
+        const docSnap = await Promise.race([getDoc(docRef), timeout]);
 
         let userData = {};
         if (docSnap.exists()) {
@@ -53,16 +56,12 @@ async function loadUserData(uid) {
 
         const displayName = userData.name || auth.currentUser?.displayName || 'User';
         const displayEmail = userData.email || auth.currentUser?.email || 'user@example.com';
-        
-        // Auto Avatar API
         const autoAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2e7d32&color=fff&size=150&bold=true`;
 
-        // Update Sidebar
         if (sidebarName) sidebarName.innerText = displayName;
         if (sidebarEmail) sidebarEmail.innerText = displayEmail;
         if (sidebarPhoto) sidebarPhoto.src = userData.photoURL || autoAvatar;
 
-        // Populate Fields Safely (Checking if elements exist in HTML)
         if (formName) formName.value = displayName;
         if (formEmail) formEmail.value = displayEmail;
         if (formPhone) formPhone.value = userData.phone || '';
@@ -85,7 +84,7 @@ function applyFallbackData() {
     if (formEmail) formEmail.value = auth.currentUser?.email || '';
 }
 
-// Update profile details with Defensive Programming
+// Update profile details with Timeout Protection
 if (profileForm) {
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -96,7 +95,6 @@ if (profileForm) {
             btn.disabled = true;
         }
 
-        // Failsafe: Checking each element separately to avoid "Cannot read properties of null" error
         const nameVal = formName ? formName.value.trim() : (auth.currentUser?.displayName || "User");
         const phoneVal = formPhone ? formPhone.value.trim() : "";
         const districtVal = formDistrict ? formDistrict.value.trim() : "";
@@ -104,15 +102,12 @@ if (profileForm) {
         const addressVal = formAddress ? formAddress.value.trim() : "";
 
         try {
-            if (!currentUserUid) {
-                throw new Error("User session not found. Please log in again.");
-            }
+            if (!currentUserUid) throw new Error("User session not found.");
 
             const userRef = doc(db, "users", currentUserUid);
             const autoAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(nameVal)}&background=2e7d32&color=fff&bold=true`;
 
-            // Force write document even if it is completely new or missing
-            await setDoc(userRef, {
+            const dataToSave = {
                 uid: currentUserUid,
                 name: nameVal,
                 phone: phoneVal,
@@ -120,7 +115,18 @@ if (profileForm) {
                 upazila: upazilaVal,
                 address: addressVal,
                 photoURL: autoAvatar
-            }, { merge: true });
+            };
+
+            // 7 Second Timeout for Saving Data
+            const saveTimeout = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("TIMEOUT_ERROR")), 7000)
+            );
+
+            // Race: If setDoc takes more than 7 seconds, it will throw TIMEOUT_ERROR
+            await Promise.race([
+                setDoc(userRef, dataToSave, { merge: true }),
+                saveTimeout
+            ]);
 
             // Sync with active UI
             if (sidebarName) sidebarName.innerText = nameVal;
@@ -128,21 +134,25 @@ if (profileForm) {
 
             Swal.fire({
                 icon: 'success',
-                title: 'Success',
-                text: 'Your profile details have been updated successfully.',
+                title: 'Success!',
+                text: 'Your profile has been saved.',
                 timer: 2000,
                 showConfirmButton: false
             });
+
         } catch (error) {
-            console.error("Firestore Write Failed:", error);
+            console.error("Save Error:", error);
             
-            // Displays the exact raw error code and message so you know exactly why it failed
-            Swal.fire({
-                icon: 'error',
-                title: 'Save Failed',
-                text: `Reason: ${error.message} (Code: ${error.code || 'JS_ERROR'})`,
-                confirmButtonColor: '#2e7d32'
-            });
+            if (error.message === "TIMEOUT_ERROR") {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Connection Blocked!',
+                    html: '<div style="text-align:left; font-size:14px;">আপনার ডাটা সেভ হচ্ছে না। এর ২ টি কারণ হতে পারে:<br><br><b>১.</b> ফায়ারবেসে আপনি এখনো <b>Firestore Database</b> চালু করেননি।<br><b>২.</b> আপনার ব্রাউজারে পুরনো কোড সেভ হয়ে আছে।<br><br>দয়া করে আপনার ব্রাউজারের <b>Incognito / Private Tab</b> এ গিয়ে ট্রাই করুন।</div>',
+                    confirmButtonColor: '#d33'
+                });
+            } else {
+                Swal.fire('Save Failed', error.message, 'error');
+            }
         } finally {
             if (btn) {
                 btn.innerHTML = 'Save Changes';
