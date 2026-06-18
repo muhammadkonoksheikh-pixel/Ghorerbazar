@@ -1,7 +1,7 @@
 import { db } from './firebase-config.js';
 import { collection, getDocs, addDoc, deleteDoc, doc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dtmvxrmwg/image/upload';
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dfiigto8h/image/upload';
 const UPLOAD_PRESET = 'ghorer_bazar_preset'; // Replace if you changed your Cloudinary preset
 
 const bannerForm = document.getElementById('add-banner-form');
