@@ -1,6 +1,5 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-// এখানে updateDoc এর বদলে setDoc ব্যবহার করা হয়েছে
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // Layout Containers
@@ -27,18 +26,18 @@ let currentUserUid = null;
 
 // Real-time Authentication Gate
 onAuthStateChanged(auth, async (user) => {
-    loadingIndicator.style.display = 'none';
+    if (loadingIndicator) loadingIndicator.style.display = 'none';
 
     if (user) {
         currentUserUid = user.uid;
-        loggedInContainer.style.display = 'grid';
-        loggedOutContainer.style.display = 'none';
+        if (loggedInContainer) loggedInContainer.style.display = 'grid';
+        if (loggedOutContainer) loggedOutContainer.style.display = 'none';
         
         await loadUserData(user.uid);
     } else {
         currentUserUid = null;
-        loggedInContainer.style.display = 'none';
-        loggedOutContainer.style.display = 'block';
+        if (loggedInContainer) loggedInContainer.style.display = 'none';
+        if (loggedOutContainer) loggedOutContainer.style.display = 'block';
     }
 });
 
@@ -48,77 +47,84 @@ async function loadUserData(uid) {
         const docSnap = await getDoc(docRef);
 
         let userData = {};
-
         if (docSnap.exists()) {
             userData = docSnap.data();
         }
 
-        // Display Name & Email fallback
-        const displayName = userData.name || auth.currentUser.displayName || 'User';
-        const displayEmail = userData.email || auth.currentUser.email || 'user@example.com';
+        const displayName = userData.name || auth.currentUser?.displayName || 'User';
+        const displayEmail = userData.email || auth.currentUser?.email || 'user@example.com';
         
-        // Auto Avatar Generation (Using UI-Avatars API) based on user name
+        // Auto Avatar API
         const autoAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2e7d32&color=fff&size=150&bold=true`;
 
-        // Populate Sidebar
-        sidebarName.innerText = displayName;
-        sidebarEmail.innerText = displayEmail;
-        sidebarPhoto.src = userData.photoURL || autoAvatar;
+        // Update Sidebar
+        if (sidebarName) sidebarName.innerText = displayName;
+        if (sidebarEmail) sidebarEmail.innerText = displayEmail;
+        if (sidebarPhoto) sidebarPhoto.src = userData.photoURL || autoAvatar;
 
-        // Populate Profile Fields
-        formName.value = displayName;
-        formEmail.value = displayEmail;
-        formPhone.value = userData.phone || '';
-        formDistrict.value = userData.district || '';
-        formUpazila.value = userData.upazila || '';
-        formAddress.value = userData.address || '';
+        // Populate Fields Safely (Checking if elements exist in HTML)
+        if (formName) formName.value = displayName;
+        if (formEmail) formEmail.value = displayEmail;
+        if (formPhone) formPhone.value = userData.phone || '';
+        if (formDistrict) formDistrict.value = userData.district || '';
+        if (formUpazila) formUpazila.value = userData.upazila || '';
+        if (formAddress) formAddress.value = userData.address || '';
 
     } catch (error) {
         console.error("Error loading user profile:", error);
-        if(error.code === 'permission-denied') {
-            Swal.fire('Database Locked', 'Please update your Firestore Security Rules to allow access.', 'error');
-        }
         applyFallbackData();
     }
 }
 
 function applyFallbackData() {
-    const name = auth.currentUser.displayName || 'User';
-    sidebarName.innerText = name;
-    sidebarEmail.innerText = auth.currentUser.email || 'user@example.com';
-    sidebarPhoto.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2e7d32&color=fff&bold=true`;
-    formName.value = name;
-    formEmail.value = auth.currentUser.email || '';
+    const name = auth.currentUser?.displayName || 'User';
+    if (sidebarName) sidebarName.innerText = name;
+    if (sidebarEmail) sidebarEmail.innerText = auth.currentUser?.email || 'user@example.com';
+    if (sidebarPhoto) sidebarPhoto.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2e7d32&color=fff&bold=true`;
+    if (formName) formName.value = name;
+    if (formEmail) formEmail.value = auth.currentUser?.email || '';
 }
 
-// Update profile details handler
+// Update profile details with Defensive Programming
 if (profileForm) {
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
         const btn = document.getElementById('save-profile-btn');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        btn.disabled = true;
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            btn.disabled = true;
+        }
+
+        // Failsafe: Checking each element separately to avoid "Cannot read properties of null" error
+        const nameVal = formName ? formName.value.trim() : (auth.currentUser?.displayName || "User");
+        const phoneVal = formPhone ? formPhone.value.trim() : "";
+        const districtVal = formDistrict ? formDistrict.value.trim() : "";
+        const upazilaVal = formUpazila ? formUpazila.value.trim() : "";
+        const addressVal = formAddress ? formAddress.value.trim() : "";
 
         try {
-            const userRef = doc(db, "users", currentUserUid);
-            const updatedName = formName.value.trim();
-            
-            // Generate auto avatar if name changed
-            const autoAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(updatedName)}&background=2e7d32&color=fff&bold=true`;
+            if (!currentUserUid) {
+                throw new Error("User session not found. Please log in again.");
+            }
 
-            // We use setDoc with { merge: true } so it forces save even if doc is missing
+            const userRef = doc(db, "users", currentUserUid);
+            const autoAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(nameVal)}&background=2e7d32&color=fff&bold=true`;
+
+            // Force write document even if it is completely new or missing
             await setDoc(userRef, {
-                name: updatedName,
-                phone: formPhone.value.trim(),
-                district: formDistrict.value.trim(),
-                upazila: formUpazila.value.trim(),
-                address: formAddress.value.trim(),
+                uid: currentUserUid,
+                name: nameVal,
+                phone: phoneVal,
+                district: districtVal,
+                upazila: upazilaVal,
+                address: addressVal,
                 photoURL: autoAvatar
             }, { merge: true });
 
             // Sync with active UI
-            sidebarName.innerText = updatedName;
-            sidebarPhoto.src = autoAvatar;
+            if (sidebarName) sidebarName.innerText = nameVal;
+            if (sidebarPhoto) sidebarPhoto.src = autoAvatar;
 
             Swal.fire({
                 icon: 'success',
@@ -128,11 +134,20 @@ if (profileForm) {
                 showConfirmButton: false
             });
         } catch (error) {
-            console.error("Error updating profile:", error);
-            Swal.fire('Update Failed', error.message, 'error');
+            console.error("Firestore Write Failed:", error);
+            
+            // Displays the exact raw error code and message so you know exactly why it failed
+            Swal.fire({
+                icon: 'error',
+                title: 'Save Failed',
+                text: `Reason: ${error.message} (Code: ${error.code || 'JS_ERROR'})`,
+                confirmButtonColor: '#2e7d32'
+            });
         } finally {
-            btn.innerHTML = 'Save Changes';
-            btn.disabled = false;
+            if (btn) {
+                btn.innerHTML = 'Save Changes';
+                btn.disabled = false;
+            }
         }
     });
 }
