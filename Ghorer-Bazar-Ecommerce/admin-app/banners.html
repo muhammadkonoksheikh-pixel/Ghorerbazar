@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Banners - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <style>
+        .banner-img-td { width: 150px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+        .row-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        @media(max-width: 992px) { .row-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="admin-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Ghorer<span>Bazar</span></h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="orders.html"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li><a href="products.html"><i class="fas fa-box"></i> Products</a></li>
+                <li><a href="categories.html"><i class="fas fa-list"></i> Categories</a></li>
+                <li><a href="users.html"><i class="fas fa-users"></i> Customers</a></li>
+                <li><a href="banners.html" class="active"><i class="fas fa-images"></i> Banners</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></div>
+                <div class="topbar-right">
+                    <div class="admin-profile"><span id="admin-name">Admin</span></div>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div class="page-header">
+                    <h2>Manage Home Sliders (Banners)</h2>
+                </div>
+
+                <div class="row-grid">
+                    <!-- Add Banner Form -->
+                    <div class="card" style="height: fit-content;">
+                        <div class="card-title">Add New Banner</div>
+                        <form id="add-banner-form">
+                            <div class="form-group">
+                                <label>Banner Title</label>
+                                <input type="text" id="b-title" class="form-control" required placeholder="e.g. Flash Sale!">
+                            </div>
+                            <div class="form-group">
+                                <label>Subtitle (Short Description)</label>
+                                <input type="text" id="b-subtitle" class="form-control" placeholder="e.g. Get 50% off today">
+                            </div>
+                            <div class="form-group">
+                                <label>Banner Image (Desktop Ratio Recommended)</label>
+                                <input type="file" id="b-image" class="form-control" accept="image/*" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Button Link</label>
+                                <input type="text" id="b-link" class="form-control" value="category.html" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Display Order</label>
+                                <input type="number" id="b-order" class="form-control" required value="1">
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="btn-save-banner" style="width:100%; justify-content:center;">Upload Banner</button>
+                        </form>
+                    </div>
+
+                    <!-- Banners List -->
+                    <div class="card">
+                        <div class="card-title">Active Banners</div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Title</th>
+                                    <th>Order</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="banners-list">
+                                <tr><td colspan="4" style="text-align:center;">Loading banners...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="assets/js/admin-auth.js"></script>
+    <script type="module" src="assets/js/banners.js"></script>
+</body>
+</html>
