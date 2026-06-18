@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Function to check if the document belongs to the requesting user
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Admins Collection
+    match /admins/{adminId} {
+      allow read: if true; // Needed for client side admin verification check
+      allow write: if false; // Must be created manually in Firebase console
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // Products & Categories & Banners
+    match /products/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /categories/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /banners/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Cart Collection
+    match /cart/{cartId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Wishlist Collection
+    match /wishlist/{wishId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      allow read: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // Order Items
+    match /order_items/{itemId} {
+      // For simplicity, letting authenticated users write initially on order creation
+      // In production, security rules should validate parent order ownership
+      allow read: if true; 
+      allow create: if request.auth != null;
+      allow update, delete: if isAdmin();
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read: if isAdmin();
+      allow create: if request.auth != null; // User creates a notification when ordering
+      allow update, delete: if isAdmin();
+    }
+
+    // Everything else
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
