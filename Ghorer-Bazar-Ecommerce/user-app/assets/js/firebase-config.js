@@ -1,7 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+// আমরা getFirestore এর বদলে initializeFirestore ইমপোর্ট করব
+import { initializeFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -17,7 +18,12 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+
+// বাংলাদেশের মোবাইল ও ব্রডব্যান্ড নেটওয়ার্ক ব্লকিং এড়াতে Long Polling ফোর্স করা হলো
+const db = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true
+});
+
 const googleProvider = new GoogleAuthProvider();
 
 export { app, auth, db, googleProvider };
