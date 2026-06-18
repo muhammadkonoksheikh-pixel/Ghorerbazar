@@ -3,44 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Cart Bag - Ghorer Bazar</title>
+    <title>Shopping Cart - Ghorer Bazar</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
-        .cart-section { padding: 40px 0 100px 0; }
-        .cart-header { border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 30px; font-size: 1.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: -0.5px;}
+        .cart-section { padding: 40px 0; min-height: 60vh; }
+        .cart-header { font-size: 1.8rem; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
         
-        .cart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }
-        
-        .cart-item { display: flex; gap: 20px; background: var(--white); padding: 20px; border-radius: var(--border-radius); border: 1px solid var(--border-color); margin-bottom: 20px; position: relative;}
-        .cart-item-img { width: 100px; height: 120px; object-fit: cover; border-radius: 4px; background: #fafafa;}
-        .cart-item-details { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .cart-item-title { font-weight: 600; font-size: 1.1rem; color: var(--primary-color); }
-        .cart-item-meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
-        .cart-item-meta span { background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-weight: 600; color: #333; margin-right: 5px; }
-        .cart-item-price { font-weight: 700; color: var(--primary-color); margin-top: 8px; }
-        
-        .cart-qty-control { display: flex; align-items: center; gap: 10px; background: var(--bg-main); padding: 5px; border-radius: 4px; width: fit-content; margin-top: 10px;}
-        .cart-qty-btn { background: #fff; border: 1px solid var(--border-color); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; border-radius: 4px;}
-        .cart-qty-input { width: 35px; border: none; text-align: center; font-weight: 700; background: transparent; outline: none;}
-        
-        .item-remove { position: absolute; top: 20px; right: 20px; color: var(--danger); background: transparent; border: none; cursor: pointer; font-size: 1.1rem; transition: 0.2s;}
-        .item-remove:hover { transform: scale(1.1); }
+        .cart-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
 
-        .summary-card { background: var(--white); border-radius: var(--border-radius); padding: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); height: fit-content; position: sticky; top: 100px; }
-        .summary-card h3 { font-size: 1.3rem; margin-bottom: 20px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-        .row-summary { display: flex; justify-content: space-between; margin-bottom: 15px; color: var(--text-muted); font-weight: 500;}
-        .total-summary { display: flex; justify-content: space-between; margin-top: 25px; padding-top: 15px; border-top: 2px dashed var(--border-color); font-size: 1.25rem; font-weight: 700; color: var(--primary-color); }
+        .cart-items { background: var(--bg-card); border-radius: var(--border-radius); padding: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .cart-item:last-child { border-bottom: none; }
         
-        .empty-bag { text-align: center; padding: 60px 20px; }
-        .empty-bag i { font-size: 5rem; color: #ddd; margin-bottom: 20px; }
+        .cart-item-img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
+        .cart-item-info { flex: 1; }
+        .cart-item-title { font-weight: 600; font-size: 1.1rem; color: var(--text-main); margin-bottom: 5px; }
+        .cart-item-price { color: var(--primary-color); font-weight: 600; }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-main);
+            padding: 5px;
+            border-radius: 6px;
+            width: fit-content;
+        }
+        .qty-btn { background: var(--white); border: 1px solid var(--border-color); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .qty-btn:hover { background: var(--primary-color); color: var(--white); border-color: var(--primary-color); }
+        .qty-input { width: 40px; text-align: center; border: none; background: transparent; font-weight: 600; outline: none; pointer-events: none;}
+        
+        .remove-btn { color: var(--danger); background: transparent; border: none; cursor: pointer; font-size: 1.2rem; padding: 10px; }
+        .remove-btn:hover { color: #a71d2a; }
 
-        @media (max-width: 992px) {
-            .cart-grid { grid-template-columns: 1fr; }
-            .cart-item { flex-direction: column; align-items: center; text-align: center; }
-            .cart-qty-control { margin: 15px auto 0 auto; }
-            .item-remove { top: 15px; right: 15px; }
+        .cart-summary { background: var(--bg-card); border-radius: var(--border-radius); padding: 25px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); height: fit-content; position: sticky; top: 90px; }
+        .cart-summary h3 { margin-bottom: 20px; font-size: 1.3rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; color: var(--text-muted); }
+        .summary-total { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px; border-top: 2px dashed var(--border-color); font-size: 1.2rem; font-weight: 700; color: var(--text-main); }
+        
+        .empty-cart { text-align: center; padding: 50px 20px; }
+        .empty-cart i { font-size: 5rem; color: #ddd; margin-bottom: 20px; }
+        .empty-cart h3 { color: var(--text-muted); margin-bottom: 20px; }
+
+        @media (max-width: 768px) {
+            .cart-container { grid-template-columns: 1fr; }
+            .cart-item { flex-wrap: wrap; }
+            .quantity-control { margin-top: 10px; }
         }
     </style>
 </head>
@@ -98,41 +118,40 @@
         <a href="profile.html"><i class="far fa-user"></i><span>Profile</span></a>
     </nav>
 
-    <!-- Main Container -->
+    <!-- Main Content -->
     <main class="container cart-section">
-        <h2 class="cart-header">Your Shopping Bag</h2>
+        <h2 class="cart-header">Your Shopping Cart</h2>
         
-        <div class="cart-grid" id="cart-content" style="display: none;">
-            <div id="cart-items-container">
-                <!-- Cart Items will be dynamically loaded here by cart.js -->
+        <div class="cart-container" id="cart-content" style="display: none;">
+            <div class="cart-items" id="cart-items-container">
+                <!-- Cart Items will be injected here -->
             </div>
             
-            <div class="summary-card">
+            <div class="cart-summary">
                 <h3>Order Summary</h3>
-                <div class="row-summary">
-                    <span>Items Total (<span id="total-items">0</span>)</span>
+                <div class="summary-row">
+                    <span>Subtotal (<span id="total-items">0</span> items)</span>
                     <span id="subtotal-amount">৳0</span>
                 </div>
-                <div class="row-summary" style="font-size:0.85rem; color:var(--secondary-color);">
-                    <span>Delivery Fee</span>
+                <div class="summary-row" style="font-size:0.85rem; color:var(--primary-color);">
+                    <span>Delivery Charge</span>
                     <span>Calculated at checkout</span>
                 </div>
-                <div class="total-summary">
-                    <span>Subtotal</span>
+                <div class="summary-total">
+                    <span>Total</span>
                     <span id="total-amount">৳0</span>
                 </div>
-                <button class="btn btn-primary btn-block" style="margin-top: 20px; font-size:1rem; padding:15px;" id="checkout-btn">Proceed to Checkout</button>
+                <button class="btn btn-primary btn-block" style="margin-top: 20px; font-size:1.1rem; padding: 12px;" id="checkout-btn">Proceed to Checkout</button>
             </div>
         </div>
 
-        <div class="empty-bag" id="empty-cart-msg">
-            <i class="fas fa-shopping-bag" style="font-size: 5rem; color: #ddd; margin-bottom: 20px;"></i>
-            <h3>Your Shopping Bag is empty</h3>
-            <a href="index.html" class="btn btn-primary" style="margin-top:20px;">Shop New Collection</a>
+        <div class="empty-cart" id="empty-cart-msg">
+            <i class="fas fa-shopping-basket" style="font-size: 5rem; color: #ddd; margin-bottom: 20px;"></i>
+            <h3>Your cart is currently empty</h3>
+            <a href="index.html" class="btn btn-primary">Start Shopping</a>
         </div>
     </main>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module" src="assets/js/firebase-config.js"></script>
     <script type="module" src="assets/js/auth.js"></script>
