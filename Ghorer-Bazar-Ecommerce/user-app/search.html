@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - Ghorer Bazar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .search-header { padding: 30px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; text-align: center; }
+        .search-header h2 { font-size: 1.8rem; color: var(--text-main); }
+        .search-header span { color: var(--primary-color); font-weight: 700; }
+        .search-container { min-height: 60vh; padding-bottom: 50px; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="container navbar">
+            <div class="logo"><a href="index.html"><h2>Ghorer<span>Bazar</span></h2></a></div>
+            <div class="search-bar" style="flex:1; max-width:500px; margin: 0 auto;">
+                <form id="search-page-form">
+                    <input type="text" id="search-page-input" placeholder="Search for products...">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                </form>
+            </div>
+            <div class="nav-icons">
+                <a href="cart.html" class="icon-link"><i class="fas fa-shopping-cart"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container search-container">
+        <div class="search-header">
+            <h2>Search Results for: <span id="search-query-display">"..."</span></h2>
+            <p id="search-count-display">0 products found</p>
+        </div>
+
+        <div class="product-grid" id="search-product-grid">
+            <!-- Skeletons -->
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+        </div>
+        
+        <div id="no-search-msg" style="display:none; text-align:center; padding: 40px; color: var(--text-muted);">
+            <i class="fas fa-search" style="font-size: 4rem; color: #ddd; margin-bottom: 15px;"></i>
+            <h3>No matching products found.</h3>
+            <p>Try using different keywords or browse our categories.</p>
+            <a href="category.html" class="btn btn-outline" style="margin-top: 20px;">Browse Categories</a>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="assets/js/search.js"></script>
+</body>
+</html>

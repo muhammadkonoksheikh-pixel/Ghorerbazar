@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Ghorer Bazar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 0;
+        }
+        .auth-wrapper {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+        .auth-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 40px 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .auth-logo h2 {
+            font-size: 2.2rem;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        .auth-logo h2 span {
+            color: var(--secondary-color);
+        }
+        .auth-card p {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+        .form-group {
+            text-align: left;
+            margin-bottom: 18px;
+            position: relative;
+        }
+        .form-group i {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: #aaa;
+            font-size: 1.1rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: #fcfcfc;
+            transition: all 0.3s ease;
+        }
+        .form-group input:focus {
+            border-color: var(--primary-color);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
+            outline: none;
+        }
+        .form-group input:focus + i {
+            color: var(--primary-color);
+        }
+        .btn-auth {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            background: var(--primary-color);
+            color: #fff;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        .btn-auth:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
+        }
+        .auth-footer {
+            margin-top: 25px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+        .auth-footer a {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        .back-home {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            color: var(--text-main);
+            font-size: 1.5rem;
+            transition: 0.3s;
+        }
+        .back-home:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-home"><i class="fas fa-arrow-left"></i></a>
+
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <h2>Ghorer<span>Bazar</span></h2>
+            </div>
+            <p>Create a new account to get started.</p>
+
+            <!-- onsubmit="event.preventDefault();" to stop page reload completely -->
+            <form id="register-form" onsubmit="event.preventDefault();">
+                <div class="form-group">
+                    <input type="text" id="name" required placeholder="Full Name">
+                    <i class="far fa-user"></i>
+                </div>
+                <div class="form-group">
+                    <input type="tel" id="phone" required placeholder="Phone Number (e.g. 017XXXXXXXX)" pattern="[0-9]{11}">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="email" required placeholder="Email Address">
+                    <i class="far fa-envelope"></i>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" required placeholder="Create Password (Min 6 chars)" minlength="6">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="confirm-password" required placeholder="Confirm Password">
+                    <i class="fas fa-lock"></i>
+                </div>
+                
+                <button type="submit" class="btn-auth" id="register-btn">Create Account</button>
+            </form>
+
+            <div class="auth-footer">
+                Already have an account? <a href="login.html">Log In here</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module">
+        import { auth, db } from './assets/js/firebase-config.js';
+        import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Extra safety against refresh
+            
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const registerBtn = document.getElementById('register-btn');
+
+            if (password !== confirmPassword) {
+                Swal.fire('Password Mismatch', 'Your passwords do not match!', 'error');
+                return;
+            }
+
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+            registerBtn.disabled = true;
+
+            try {
+                // 1. Create User
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // 2. Update Auth Profile
+                await updateProfile(user, { displayName: name });
+
+                // 3. Save to Firestore DB
+                await setDoc(doc(db, "users", user.uid), {
+                    uid: user.uid,
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    address: "",
+                    district: "",
+                    upazila: "",
+                    photoURL: "",
+                    createdAt: serverTimestamp(),
+                    role: "user"
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Account Created!',
+                    text: 'Taking you to your profile...',
+                    showConfirmButton: false,
+                    timer: 2000
+                }).then(() => {
+                    window.location.href = 'profile.html';
+                });
+
+            } catch (error) {
+                let msg = error.message;
+                if(error.code === 'auth/email-already-in-use') msg = "Email already exists!";
+                Swal.fire('Registration Failed', msg, 'error');
+                
+                registerBtn.innerHTML = 'Create Account';
+                registerBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

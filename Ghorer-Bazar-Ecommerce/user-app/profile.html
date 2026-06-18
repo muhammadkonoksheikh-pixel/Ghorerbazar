@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Ghorer Bazar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .profile-section {
+            padding: 40px 0;
+            min-height: 70vh;
+        }
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+        }
+        /* Sidebar */
+        .profile-sidebar {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            padding: 30px 20px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            height: fit-content;
+        }
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--bg-main);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 15px;
+        }
+        .profile-sidebar h3 {
+            font-size: 1.2rem;
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+        .profile-sidebar p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        .profile-nav {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            gap: 5px;
+        }
+        .profile-nav a {
+            padding: 12px 15px;
+            border-radius: 8px;
+            color: var(--text-main);
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .profile-nav a:hover, .profile-nav a.active {
+            background: var(--bg-main);
+            color: var(--primary-color);
+        }
+        /* Main Content */
+        .profile-content {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            padding: 30px;
+            border: 1px solid var(--border-color);
+        }
+        .profile-content h2 {
+            border-bottom: 2px solid var(--bg-main);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        /* Logged Out Container style */
+        .logged-out-card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            padding: 50px 30px;
+            text-align: center;
+            max-width: 500px;
+            margin: 60px auto;
+            border: 1px solid var(--border-color);
+        }
+        .logged-out-card i {
+            font-size: 4rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        .logged-out-card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .logged-out-card p {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+        .logged-out-btns {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container navbar">
+            <div class="logo"><a href="index.html"><h2>Ghorer<span>Bazar</span></h2></a></div>
+            <div class="nav-icons">
+                <a href="index.html" class="icon-link" title="Home"><i class="fas fa-home"></i></a>
+                <a href="cart.html" class="icon-link" title="Cart"><i class="fas fa-shopping-cart"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container profile-section">
+        <!-- Loading State Indicator -->
+        <div id="profile-loading" style="text-align: center; padding: 50px; font-size: 1.2rem; color: var(--primary-color);">
+            <i class="fas fa-spinner fa-spin"></i> Checking authentication state...
+        </div>
+
+        <!-- Logged Out View (Visible only when not logged in) -->
+        <div class="logged-out-card" id="profile-logged-out-container" style="display: none;">
+            <i class="fas fa-user-lock"></i>
+            <h2>Access Denied</h2>
+            <p>Please log in or register to view your account dashboard, profile details, and order history.</p>
+            <div class="logged-out-btns">
+                <a href="login.html" class="btn btn-primary" style="padding: 12px 25px;">Log In</a>
+                <a href="register.html" class="btn btn-outline" style="padding: 12px 25px;">Register</a>
+            </div>
+        </div>
+
+        <!-- Logged In View (Visible only when authenticated) -->
+        <div class="profile-grid" id="profile-logged-in-container" style="display: none;">
+            <!-- Sidebar -->
+            <div class="profile-sidebar">
+                <img src="assets/images/default-avatar.png" alt="Profile" class="profile-photo" id="sidebar-photo" onerror="this.src='https://res.cloudinary.com/dtmvxrmwg/image/upload/v1/users/default-avatar.png'">
+                <h3 id="sidebar-name">Loading...</h3>
+                <p id="sidebar-email">loading@email.com</p>
+                <div class="profile-nav">
+                    <a href="profile.html" class="active"><i class="fas fa-user"></i> Account Details</a>
+                    <a href="my-orders.html"><i class="fas fa-box"></i> My Orders</a>
+                    <a href="wishlist.html"><i class="fas fa-heart"></i> Wishlist</a>
+                    <a href="#" id="profile-logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="profile-content">
+                <h2>Account Details</h2>
+                <form id="profile-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="prof-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" id="prof-phone" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address (Cannot be changed)</label>
+                        <input type="email" id="prof-email" readonly disabled style="background:#f5f5f5;">
+                    </div>
+                    
+                    <h3 style="margin: 30px 0 15px; border-bottom: 1px solid #eee; padding-bottom:10px;">Shipping Address</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>District</label>
+                            <input type="text" id="prof-district" placeholder="e.g. Dhaka">
+                        </div>
+                        <div class="form-group">
+                            <label>Upazila / Thana</label>
+                            <input type="text" id="prof-upazila" placeholder="e.g. Dhanmondi">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Detailed Address</label>
+                        <textarea id="prof-address" rows="3" placeholder="House/Road/Area details"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="save-profile-btn">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="assets/js/profile.js"></script>
+</body>
+</html>

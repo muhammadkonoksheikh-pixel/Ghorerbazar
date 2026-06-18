@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Ghorer Bazar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .payment-section { padding: 40px 0; min-height: 70vh; display: flex; justify-content: center; }
+        .payment-card { background: var(--bg-card); border-radius: var(--border-radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 600px; overflow: hidden; border: 1px solid var(--border-color); }
+        
+        .payment-header { background: var(--primary-color); color: var(--white); padding: 25px; text-align: center; }
+        .payment-header h2 { font-size: 1.5rem; margin-bottom: 5px; }
+        .total-pay { font-size: 2rem; font-weight: 700; }
+
+        .payment-body { padding: 30px; }
+
+        .method-selector { display: flex; gap: 15px; margin-bottom: 30px; }
+        .method-btn { flex: 1; border: 2px solid var(--border-color); border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; transition: var(--transition); background: var(--white); }
+        .method-btn img { height: 40px; object-fit: contain; }
+        .method-btn.active { border-color: var(--primary-color); background: rgba(46, 125, 50, 0.05); box-shadow: 0 4px 10px rgba(46,125,50,0.1); transform: translateY(-2px); }
+
+        .instruction-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 0.95rem; }
+        
+        .number-box { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border: 1px dashed var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 25px; font-weight: 600; font-size: 1.2rem; }
+        .copy-btn { background: var(--border-color); border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: var(--transition); }
+        .copy-btn:hover { background: #d0d0d0; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
+        .form-group input { width: 100%; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; text-transform: uppercase; }
+        .form-group input:focus { border-color: var(--primary-color); outline: none; }
+        
+        .btn-submit { width: 100%; padding: 15px; font-size: 1.1rem; font-weight: 700; border-radius: 8px; }
+        
+        .security-badge { text-align: center; margin-top: 20px; color: var(--text-muted); font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+        .cod-msg { display: none; background: #e2f0e5; color: #1b5e20; border: 1px solid #c3e6cb; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 25px; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="container navbar">
+            <div class="logo"><a href="index.html"><h2>Ghorer<span>Bazar</span></h2></a></div>
+        </div>
+    </header>
+
+    <main class="container payment-section">
+        <div class="payment-card">
+            <div class="payment-header">
+                <h2>Total Payable</h2>
+                <div class="total-pay" id="pay-amount">৳0</div>
+            </div>
+
+            <div class="payment-body">
+                <h3 style="margin-bottom: 15px; font-size: 1.1rem; text-align:center;">Select Payment Method</h3>
+                
+                <div class="method-selector">
+                    <div class="method-btn active" data-method="bkash" id="btn-bkash">
+                        <img src="assets/images/bkash.png" alt="bKash" onerror="this.src='https://seeklogo.com/images/B/bkash-logo-0C1572FBB4-seeklogo.com.png'">
+                    </div>
+                    <div class="method-btn" data-method="nagad" id="btn-nagad">
+                        <img src="assets/images/nagad.png" alt="Nagad" onerror="this.src='https://download.logo.wine/logo/Nagad/Nagad-Logo.wine.png'">
+                    </div>
+                    <div class="method-btn" data-method="cod" id="btn-cod">
+                        <i class="fas fa-hand-holding-usd" style="font-size: 2rem; color:#444; margin-top:5px;"></i>
+                        <div style="font-size: 0.8rem; font-weight:600; margin-top:5px; color:#444;">COD</div>
+                    </div>
+                </div>
+
+                <div id="manual-payment-area">
+                    <div class="instruction-box">
+                        <strong>Instructions:</strong> Please send the exact amount to the <span id="method-name-text">bKash</span> Personal number below. Then enter the Transaction ID (TrxID) to confirm your order.
+                    </div>
+
+                    <div class="number-box">
+                        <div>
+                            <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Send Money To</span>
+                            <span id="merchant-number">017XXXXXXXX</span>
+                        </div>
+                        <button class="copy-btn" onclick="copyNumber()"><i class="far fa-copy"></i> Copy</button>
+                    </div>
+
+                    <form id="payment-form">
+                        <div class="form-group">
+                            <label for="trx-id">Transaction ID (TrxID) *</label>
+                            <input type="text" id="trx-id" required placeholder="e.g. 9XZ8FR2WQA">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-submit" id="confirm-order-btn">Verify & Confirm Order <i class="fas fa-check-circle"></i></button>
+                    </form>
+                </div>
+
+                <div id="cod-area" class="cod-msg">
+                    <i class="fas fa-box" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                    <p><strong>Cash on Delivery selected.</strong><br>You will pay when you receive the product at your doorstep.</p>
+                    <button class="btn btn-primary btn-submit" style="margin-top: 15px;" id="cod-confirm-btn">Confirm COD Order</button>
+                </div>
+
+                <div class="security-badge">
+                    <i class="fas fa-lock"></i> 256-bit Secure Checkout Process
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="assets/js/payment.js"></script>
+    <script>
+        function copyNumber() {
+            const num = document.getElementById('merchant-number').innerText;
+            navigator.clipboard.writeText(num).then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Copied!',
+                    text: 'Number copied to clipboard.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            });
+        }
+    </script>
+</body>
+</html>

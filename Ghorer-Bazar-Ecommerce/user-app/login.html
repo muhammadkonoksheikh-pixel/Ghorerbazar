@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Ghorer Bazar</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .auth-wrapper {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+        .auth-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 40px 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .auth-logo {
+            margin-bottom: 20px;
+        }
+        .auth-logo h2 {
+            font-size: 2.2rem;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        .auth-logo h2 span {
+            color: var(--secondary-color);
+        }
+        .auth-card p {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .form-group i {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: #aaa;
+            font-size: 1.1rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: #fcfcfc;
+            transition: all 0.3s ease;
+        }
+        .form-group input:focus {
+            border-color: var(--primary-color);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
+            outline: none;
+        }
+        .form-group input:focus + i, .form-group input:valid + i {
+            color: var(--primary-color);
+        }
+        .forgot-pass {
+            display: block;
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+        .btn-auth {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            background: var(--primary-color);
+            color: #fff;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        .btn-auth:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .divider span {
+            padding: 0 15px;
+        }
+        .btn-google {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #ddd;
+            color: #444;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+        .btn-google:hover {
+            background: #f9f9f9;
+            border-color: #ccc;
+        }
+        .btn-google img {
+            width: 22px;
+        }
+        .auth-footer {
+            margin-top: 25px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+        .auth-footer a {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        .back-home {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            color: var(--text-main);
+            font-size: 1.5rem;
+            transition: 0.3s;
+        }
+        .back-home:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-home"><i class="fas fa-arrow-left"></i></a>
+
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <h2>Ghorer<span>Bazar</span></h2>
+            </div>
+            <p>Welcome back! Please login to your account.</p>
+
+            <!-- onsubmit="event.preventDefault();" prevents page reload -->
+            <form id="login-form" onsubmit="event.preventDefault();">
+                <div class="form-group">
+                    <input type="email" id="email" required placeholder="Email Address">
+                    <i class="far fa-envelope"></i>
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <input type="password" id="password" required placeholder="Password">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <a href="forgot-password.html" class="forgot-pass">Forgot Password?</a>
+                
+                <button type="submit" class="btn-auth" id="login-btn">Log In</button>
+            </form>
+
+            <div class="divider"><span>OR</span></div>
+
+            <!-- type="button" ensures it doesn't trigger form submit -->
+            <button type="button" class="btn-google" id="google-login-btn">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google">
+                Continue with Google
+            </button>
+
+            <div class="auth-footer">
+                Don't have an account? <a href="register.html">Create one</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module">
+        import { auth, db, googleProvider } from './assets/js/firebase-config.js';
+        import { signInWithEmailAndPassword, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Email & Password Login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Extra protection against reload
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('login-btn');
+
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            loginBtn.disabled = true;
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                
+                // Check if admin
+                const adminDoc = await getDoc(doc(db, "admins", userCredential.user.uid));
+                if (adminDoc.exists()) {
+                    window.location.href = '../admin-app/dashboard.html';
+                } else {
+                    window.location.href = 'profile.html';
+                }
+            } catch (error) {
+                let msg = 'Invalid email or password.';
+                if(error.code === 'auth/network-request-failed') msg = 'No internet connection.';
+                Swal.fire('Login Failed', msg, 'error');
+                
+                loginBtn.innerHTML = 'Log In';
+                loginBtn.disabled = false;
+            }
+        });
+
+        // Google Login
+        document.getElementById('google-login-btn').addEventListener('click', async () => {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+
+                // Check and Save User in Firestore if new
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
+
+                if (!docSnap.exists()) {
+                    await setDoc(userRef, {
+                        uid: user.uid,
+                        name: user.displayName,
+                        email: user.email,
+                        photoURL: user.photoURL,
+                        phone: user.phoneNumber || "",
+                        address: "",
+                        district: "",
+                        upazila: "",
+                        createdAt: serverTimestamp(),
+                        role: "user"
+                    });
+                }
+                window.location.href = 'profile.html';
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Google Auth Error', 'Something went wrong during Google Login.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

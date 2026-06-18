@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist - Ghorer Bazar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .wishlist-section { padding: 40px 0; min-height: 70vh; }
+        .wishlist-header { border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 30px; font-size: 1.8rem; }
+        
+        .wishlist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; }
+        
+        /* Overriding Product Card slightly for Wishlist */
+        .wishlist-card { position: relative; }
+        .btn-remove-wishlist { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--danger); border: none; box-shadow: var(--shadow-sm); cursor: pointer; z-index: 5; transition: var(--transition); }
+        .btn-remove-wishlist:hover { background: var(--danger); color: var(--white); }
+
+        .empty-wishlist { text-align: center; padding: 60px 20px; }
+        .empty-wishlist i { font-size: 5rem; color: #ddd; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="container navbar">
+            <div class="logo"><a href="index.html"><h2>Ghorer<span>Bazar</span></h2></a></div>
+            <div class="nav-icons">
+                <a href="profile.html" class="icon-link" title="Profile"><i class="fas fa-user-circle"></i></a>
+                <a href="cart.html" class="icon-link" title="Cart"><i class="fas fa-shopping-cart"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container wishlist-section">
+        <h2 class="wishlist-header">My Wishlist</h2>
+        
+        <div class="wishlist-grid" id="wishlist-container">
+            <!-- Loading -->
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+        </div>
+
+        <div class="empty-wishlist" id="empty-wishlist-msg" style="display: none;">
+            <i class="far fa-heart"></i>
+            <h3>Your wishlist is empty</h3>
+            <p style="color:var(--text-muted); margin-bottom:20px;">Save items you love to view them later.</p>
+            <a href="index.html" class="btn btn-primary">Discover Products</a>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="assets/js/wishlist.js"></script>
+</body>
+</html>

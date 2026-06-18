@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Order - Ghorer Bazar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .track-section { padding: 40px 0; min-height: 70vh; }
+        .track-container { max-width: 800px; margin: 0 auto; background: var(--bg-card); border-radius: var(--border-radius); padding: 40px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); }
+        
+        .track-header { text-align: center; margin-bottom: 40px; }
+        .track-header h2 { font-size: 1.8rem; color: var(--primary-color); }
+        
+        /* Search Form if no ID provided */
+        .track-form { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; }
+        .track-form input { padding: 12px 20px; border: 1px solid var(--border-color); border-radius: 8px; width: 60%; font-size: 1rem; outline: none; }
+        .track-form input:focus { border-color: var(--primary-color); }
+        
+        /* Timeline */
+        .timeline-container { display: none; }
+        .timeline { position: relative; margin: 40px 0; padding-left: 30px; }
+        .timeline::before { content: ''; position: absolute; left: 10px; top: 0; height: 100%; width: 4px; background: #e0e0e0; border-radius: 4px; }
+        
+        .timeline-item { position: relative; margin-bottom: 30px; }
+        .timeline-item::before { content: ''; position: absolute; left: -26px; top: 5px; width: 16px; height: 16px; border-radius: 50%; background: #e0e0e0; border: 3px solid var(--white); box-shadow: 0 0 0 2px #e0e0e0; z-index: 2; transition: var(--transition); }
+        
+        .timeline-item.active::before { background: var(--primary-color); box-shadow: 0 0 0 2px var(--primary-color); }
+        .timeline-item.active ~ .timeline-item::before { background: #e0e0e0; }
+        
+        .timeline-content { background: #f8f9fa; padding: 15px 20px; border-radius: 8px; border: 1px solid var(--border-color); position: relative; }
+        .timeline-content h4 { color: var(--text-main); margin-bottom: 5px; }
+        .timeline-content p { font-size: 0.9rem; color: var(--text-muted); }
+        
+        .order-details-box { background: rgba(46, 125, 50, 0.05); border: 1px dashed var(--primary-color); padding: 20px; border-radius: 8px; margin-top: 30px; }
+        
+        .loading { text-align: center; font-size: 1.2rem; color: var(--primary-color); display: none; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="container navbar">
+            <div class="logo"><a href="index.html"><h2>Ghorer<span>Bazar</span></h2></a></div>
+            <div class="nav-icons">
+                <a href="my-orders.html" class="icon-link" title="My Orders"><i class="fas fa-box"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container track-section">
+        <div class="track-container">
+            <div class="track-header">
+                <h2>Track Your Order</h2>
+                <p>Enter your Order ID below or select an order from "My Orders" to track its status.</p>
+            </div>
+
+            <form class="track-form" id="track-form">
+                <input type="text" id="track-input" placeholder="e.g. GB-A1B2C3" required>
+                <button type="submit" class="btn btn-primary">Track</button>
+            </form>
+
+            <div class="loading" id="track-loading"><i class="fas fa-spinner fa-spin"></i> Searching...</div>
+
+            <div class="timeline-container" id="timeline-container">
+                <div class="order-details-box" id="order-info-display">
+                    <!-- Info Injected here -->
+                </div>
+
+                <div class="timeline" id="status-timeline">
+                    <!-- Default structure, classes manipulated via JS -->
+                    <div class="timeline-item" id="step-pending">
+                        <div class="timeline-content">
+                            <h4>Order Placed (Pending)</h4>
+                            <p>We have received your order.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="step-confirmed">
+                        <div class="timeline-content">
+                            <h4>Confirmed</h4>
+                            <p>Your order and payment have been verified.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="step-processing">
+                        <div class="timeline-content">
+                            <h4>Processing / Packed</h4>
+                            <p>Your order is being packed and prepared for dispatch.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="step-shipped">
+                        <div class="timeline-content">
+                            <h4>Shipped</h4>
+                            <p>Handed over to the delivery partner.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="step-delivered">
+                        <div class="timeline-content">
+                            <h4>Delivered</h4>
+                            <p>Package has been delivered to your address.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module">
+        import { db } from './assets/js/firebase-config.js';
+        import { collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const docId = urlParams.get('id');
+        
+        const trackForm = document.getElementById('track-form');
+        const trackInput = document.getElementById('track-input');
+        const timelineContainer = document.getElementById('timeline-container');
+        const loadingBox = document.getElementById('track-loading');
+        const infoDisplay = document.getElementById('order-info-display');
+
+        // Steps
+        const steps = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
+
+        if (docId) {
+            trackForm.style.display = 'none';
+            fetchOrderByDocId(docId);
+        }
+
+        trackForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const oid = trackInput.value.trim().toUpperCase();
+            fetchOrderByOrderId(oid);
+        });
+
+        async function fetchOrderByDocId(id) {
+            loadingBox.style.display = 'block';
+            timelineContainer.style.display = 'none';
+            try {
+                const docSnap = await getDoc(doc(db, "orders", id));
+                if (docSnap.exists()) {
+                    displayStatus(docSnap.data());
+                } else {
+                    Swal.fire('Not Found', 'Order details not found.', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Failed to fetch order.', 'error');
+            }
+            loadingBox.style.display = 'none';
+        }
+
+        async function fetchOrderByOrderId(oid) {
+            loadingBox.style.display = 'block';
+            timelineContainer.style.display = 'none';
+            try {
+                const q = query(collection(db, "orders"), where("orderId", "==", oid));
+                const snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                    displayStatus(snapshot.docs[0].data());
+                } else {
+                    Swal.fire('Not Found', 'No order found with this ID.', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Failed to fetch order.', 'error');
+            }
+            loadingBox.style.display = 'none';
+        }
+
+        function displayStatus(data) {
+            timelineContainer.style.display = 'block';
+            
+            infoDisplay.innerHTML = `
+                <strong>Order ID:</strong> ${data.orderId} <br>
+                <strong>Total Amount:</strong> ৳${data.totalAmount} <br>
+                <strong>Payment Status:</strong> ${data.paymentStatus.toUpperCase()} <br>
+                <strong>Current Status:</strong> <span style="color:var(--primary-color); font-weight:bold;">${data.orderStatus.toUpperCase()}</span>
+            `;
+
+            // Reset all
+            steps.forEach(s => document.getElementById(`step-${s}`).classList.remove('active'));
+
+            // Set Active State based on hierarchy
+            const s = data.orderStatus.toLowerCase();
+            
+            if(s.includes('cancel')) {
+                infoDisplay.innerHTML += `<br><span style="color:red; font-weight:bold;">ORDER CANCELLED</span>`;
+                document.getElementById('status-timeline').style.display = 'none';
+                return;
+            } else {
+                document.getElementById('status-timeline').style.display = 'block';
+            }
+
+            document.getElementById('step-pending').classList.add('active');
+            
+            if(s.includes('confirm') || s.includes('process') || s.includes('pack') || s.includes('ship') || s.includes('deliver')) {
+                document.getElementById('step-confirmed').classList.add('active');
+            }
+            if(s.includes('process') || s.includes('pack') || s.includes('ship') || s.includes('deliver')) {
+                document.getElementById('step-processing').classList.add('active');
+            }
+            if(s.includes('ship') || s.includes('deliver')) {
+                document.getElementById('step-shipped').classList.add('active');
+            }
+            if(s.includes('deliver')) {
+                document.getElementById('step-delivered').classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

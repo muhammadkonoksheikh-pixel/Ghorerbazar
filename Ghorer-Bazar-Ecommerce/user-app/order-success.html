@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Success - Ghorer Bazar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .success-container { min-height: 80vh; display: flex; justify-content: center; align-items: center; padding: 40px 20px; }
+        .success-card { background: var(--white); border-radius: 20px; box-shadow: var(--shadow-lg); padding: 50px 30px; text-align: center; max-width: 500px; width: 100%; border-top: 5px solid var(--success); }
+        .success-icon { font-size: 5rem; color: var(--success); margin-bottom: 20px; animation: scale-up 0.5s ease; }
+        .success-card h2 { font-size: 2rem; color: var(--text-main); margin-bottom: 10px; }
+        .success-card p { color: var(--text-muted); margin-bottom: 30px; line-height: 1.6; }
+        
+        .order-id-box { background: var(--bg-main); border: 1px dashed var(--border-color); padding: 15px; border-radius: 8px; font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 30px; letter-spacing: 1px; }
+        
+        .action-btns { display: flex; flex-direction: column; gap: 15px; }
+        
+        @keyframes scale-up {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="container navbar">
+            <div class="logo"><a href="index.html"><h2>Ghorer<span>Bazar</span></h2></a></div>
+        </div>
+    </header>
+
+    <main class="success-container">
+        <div class="success-card">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h2>Order Placed Successfully!</h2>
+            <p>Thank you for shopping with Ghorer Bazar. Your order has been received and is currently being processed.</p>
+            
+            <div class="order-id-box">
+                Order ID: <span id="display-order-id">Loading...</span>
+            </div>
+            
+            <div class="action-btns">
+                <a href="my-orders.html" class="btn btn-primary">Track My Order</a>
+                <a href="index.html" class="btn btn-outline">Continue Shopping</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('orderId');
+        if(orderId) {
+            document.getElementById('display-order-id').innerText = orderId;
+        } else {
+            document.getElementById('display-order-id').innerText = 'N/A';
+        }
+    </script>
+</body>
+</html>
