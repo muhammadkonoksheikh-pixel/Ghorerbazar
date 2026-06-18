@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Products - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <style>
+        .product-img-td { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+        .action-btns { display: flex; gap: 10px; }
+        .btn-icon { width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; border-radius: 6px; border: none; cursor: pointer; color: #fff; transition: var(--transition); }
+        .btn-edit { background: var(--info); }
+        .btn-edit:hover { background: #138496; }
+        .btn-delete { background: var(--danger); }
+        .btn-delete:hover { background: #c82333; }
+        
+        .search-filter-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
+        .search-box { display: flex; background: #fff; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; width: 300px; }
+        .search-box input { border: none; padding: 10px 15px; width: 100%; outline: none; }
+        .search-box button { background: var(--primary); color: #fff; border: none; padding: 0 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Ghorer<span>Bazar</span></h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="orders.html"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li><a href="products.html" class="active"><i class="fas fa-box"></i> Products</a></li>
+                <li><a href="categories.html"><i class="fas fa-list"></i> Categories</a></li>
+                <li><a href="users.html"><i class="fas fa-users"></i> Customers</a></li>
+                <li><a href="banners.html"><i class="fas fa-images"></i> Banners</a></li>
+                <li><a href="#" id="admin-logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></div>
+                <div class="topbar-right">
+                    <div class="admin-profile">
+                        <img src="../user-app/assets/images/default-avatar.png" alt="Admin">
+                        <span id="admin-name">Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div class="page-header">
+                    <h2>Manage Products</h2>
+                    <a href="add-product.html" class="btn btn-primary"><i class="fas fa-plus"></i> Add New Product</a>
+                </div>
+
+                <div class="card">
+                    <div class="search-filter-bar">
+                        <div class="search-box">
+                            <input type="text" id="search-product" placeholder="Search by name...">
+                            <button><i class="fas fa-search"></i></button>
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--text-muted);" id="product-count">Loading...</div>
+                    </div>
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-list">
+                            <tr>
+                                <td colspan="6" style="text-align: center;">Loading products...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="assets/js/admin-auth.js"></script>
+    <script type="module" src="assets/js/products.js"></script>
+</body>
+</html>

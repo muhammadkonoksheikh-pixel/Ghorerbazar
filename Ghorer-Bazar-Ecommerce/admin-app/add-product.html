@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <style>
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .preview-area { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+        .switch-container { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .upload-note { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Ghorer<span>Bazar</span></h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="orders.html"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li><a href="products.html" class="active"><i class="fas fa-box"></i> Products</a></li>
+                <li><a href="categories.html"><i class="fas fa-list"></i> Categories</a></li>
+                <li><a href="users.html"><i class="fas fa-users"></i> Customers</a></li>
+                <li><a href="banners.html"><i class="fas fa-images"></i> Banners</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></div>
+                <div class="topbar-right">
+                    <div class="admin-profile">
+                        <span id="admin-name">Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div class="page-header">
+                    <h2>Add New Product</h2>
+                    <a href="products.html" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+                </div>
+
+                <div class="card">
+                    <form id="add-product-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Product Name *</label>
+                                <input type="text" id="p-name" class="form-control" required placeholder="e.g. Premium Honey">
+                            </div>
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="p-category" class="form-control" required>
+                                    <option value="">Select Category</option>
+                                    <!-- Dynamic Categories -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Selling Price (৳) *</label>
+                                <input type="number" id="p-price" class="form-control" required placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label>Old Price (৳) (Optional)</label>
+                                <input type="number" id="p-old-price" class="form-control" placeholder="0.00 (For discount strikethrough)">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Product Images (Upload directly to Cloudinary) *</label>
+                            <input type="file" id="p-images" class="form-control" multiple accept="image/*" required>
+                            <p class="upload-note">Select up to 4 images. Ensure your Cloudinary unsigned preset "ghorer_bazar_preset" is active.</p>
+                            <div class="preview-area" id="image-preview"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Description *</label>
+                            <textarea id="p-desc" class="form-control" rows="5" required placeholder="Detailed product description..."></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group switch-container">
+                                <input type="checkbox" id="p-featured" style="width:18px; height:18px;">
+                                <label for="p-featured" style="margin-bottom:0;">Featured Product</label>
+                            </div>
+                            <div class="form-group switch-container">
+                                <input type="checkbox" id="p-flash" style="width:18px; height:18px;">
+                                <label for="p-flash" style="margin-bottom:0;">Add to Flash Sale</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="submit-btn" style="width:100%; padding: 12px; margin-top:20px; justify-content:center; font-size:1.1rem;">
+                            Save Product <i class="fas fa-save"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="assets/js/admin-auth.js"></script>
+    <script type="module">
+        import { db } from './assets/js/firebase-config.js';
+        import { collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Cloudinary Settings
+        const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dtmvxrmwg/image/upload';
+        const UPLOAD_PRESET = 'ghorer_bazar_preset'; // You must create an unsigned upload preset in Cloudinary named this
+
+        const catSelect = document.getElementById('p-category');
+        const imgInput = document.getElementById('p-images');
+        const previewArea = document.getElementById('image-preview');
+        const form = document.getElementById('add-product-form');
+        const submitBtn = document.getElementById('submit-btn');
+
+        // Load Categories
+        async function loadCategories() {
+            try {
+                const snap = await getDocs(collection(db, "categories"));
+                snap.forEach(doc => {
+                    const opt = document.createElement('option');
+                    opt.value = doc.id;
+                    opt.text = doc.data().name;
+                    opt.setAttribute('data-name', doc.data().name);
+                    catSelect.appendChild(opt);
+                });
+            } catch (e) {
+                console.error("Failed to load categories", e);
+            }
+        }
+        loadCategories();
+
+        // Image Preview
+        imgInput.addEventListener('change', () => {
+            previewArea.innerHTML = '';
+            Array.from(imgInput.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'preview-img';
+                    previewArea.appendChild(img);
+                }
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Submit Form
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const files = imgInput.files;
+            if (files.length === 0) {
+                Swal.fire('Error', 'Please select at least one image', 'error');
+                return;
+            }
+
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading Images...';
+            submitBtn.disabled = true;
+
+            try {
+                // 1. Upload Images to Cloudinary
+                let uploadedUrls = [];
+                for (let i = 0; i < files.length; i++) {
+                    const formData = new FormData();
+                    formData.append('file', files[i]);
+                    formData.append('upload_preset', UPLOAD_PRESET);
+                    formData.append('folder', 'products');
+
+                    const res = await fetch(CLOUDINARY_URL, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    
+                    if (data.secure_url) {
+                        uploadedUrls.push(data.secure_url);
+                    } else {
+                        throw new Error(data.error.message || 'Image upload failed');
+                    }
+                }
+
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving to Database...';
+
+                // 2. Save to Firestore
+                const catOption = catSelect.options[catSelect.selectedIndex];
+                
+                const productData = {
+                    name: document.getElementById('p-name').value.trim(),
+                    categoryId: catSelect.value,
+                    categoryName: catOption.getAttribute('data-name'),
+                    price: parseFloat(document.getElementById('p-price').value),
+                    oldPrice: document.getElementById('p-old-price').value ? parseFloat(document.getElementById('p-old-price').value) : null,
+                    description: document.getElementById('p-desc').value.trim(),
+                    images: uploadedUrls,
+                    isFeatured: document.getElementById('p-featured').checked,
+                    isFlashSale: document.getElementById('p-flash').checked,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                };
+
+                await addDoc(collection(db, "products"), productData);
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Product added successfully.'
+                }).then(() => {
+                    window.location.href = 'products.html';
+                });
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', error.message || 'Something went wrong', 'error');
+                submitBtn.innerHTML = 'Save Product <i class="fas fa-save"></i>';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

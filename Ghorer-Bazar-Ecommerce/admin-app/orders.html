@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Orders - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <style>
+        .filter-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; overflow-x: auto; }
+        .filter-tab { background: #f1f1f1; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: 500; white-space: nowrap; transition: var(--transition); }
+        .filter-tab:hover { background: #e2e2e2; }
+        .filter-tab.active { background: var(--primary); color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Ghorer<span>Bazar</span></h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="orders.html" class="active"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li><a href="products.html"><i class="fas fa-box"></i> Products</a></li>
+                <li><a href="categories.html"><i class="fas fa-list"></i> Categories</a></li>
+                <li><a href="users.html"><i class="fas fa-users"></i> Customers</a></li>
+                <li><a href="banners.html"><i class="fas fa-images"></i> Banners</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></div>
+                <div class="topbar-right">
+                    <div class="admin-profile"><span id="admin-name">Admin</span></div>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div class="page-header">
+                    <h2>Orders Management</h2>
+                </div>
+
+                <div class="card">
+                    <div class="filter-tabs" id="order-filters">
+                        <button class="filter-tab active" data-filter="All">All Orders</button>
+                        <button class="filter-tab" data-filter="Pending">Pending</button>
+                        <button class="filter-tab" data-filter="Confirmed">Confirmed</button>
+                        <button class="filter-tab" data-filter="Processing">Processing</button>
+                        <button class="filter-tab" data-filter="Shipped">Shipped</button>
+                        <button class="filter-tab" data-filter="Delivered">Delivered</button>
+                        <button class="filter-tab" data-filter="Cancelled">Cancelled</button>
+                    </div>
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Total Amount</th>
+                                <th>Payment Method</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-list">
+                            <tr><td colspan="7" style="text-align:center;">Loading orders...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="assets/js/admin-auth.js"></script>
+    <script type="module" src="assets/js/orders.js"></script>
+</body>
+</html>
