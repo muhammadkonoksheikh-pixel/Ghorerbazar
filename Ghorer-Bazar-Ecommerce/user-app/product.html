@@ -1,41 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Add head codes exactly like previous product.html but referencing your new CSS logic -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details - Ghorer Bazar Fashion</title>
+    <title>Product Details - Ghorer Bazar</title>
+    
+    <!-- Google Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
     <link rel="stylesheet" href="assets/css/style.css">
-    <style>
-        .product-details-section { padding: 40px 0; }
-        .product-main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 50px; }
-        .main-img-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius); overflow: hidden; height: 500px; display: flex; justify-content: center; align-items: center;}
-        .main-img-container img { width: 100%; height: 100%; object-fit: contain;}
-        .thumb-gallery { display: flex; gap: 10px; margin-top:15px; }
-        .thumb-item { width: 80px; height: 80px; border: 2px solid var(--border-color); border-radius: 8px; cursor: pointer; }
-        .thumb-item.active { border-color: var(--primary-color); }
-        .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
 
-        .product-info-wrap { display: flex; flex-direction: column; }
-        .product-title-large { font-size: 2rem; font-weight: 700; color: var(--text-main); margin-bottom: 10px;}
-        .price-wrap { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
-        .price-new { font-size: 2rem; font-weight: 700; color: var(--primary-color); }
-        .action-area { display: flex; gap: 15px; margin-bottom: 20px; align-items: stretch; }
+    <!-- Fashion Specific Styling -->
+    <style>
+        .product-page-wrapper {
+            padding: 20px 0 60px 0;
+            display: grid;
+            grid-template-columns: 50% 50%;
+            gap: 40px;
+        }
+
+        /* Fast Premium Gallery for 4+ Images */
+        .premium-gallery-container { display: flex; flex-direction: row-reverse; gap: 20px; height: 550px;}
+        .main-swiper-container { width: 80%; height: 100%; border-radius: 12px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--border-color); }
+        .main-swiper-container img { width: 100%; height: 100%; object-fit: contain; }
         
-        .qty-selector { display: flex; align-items: center; border: 1px solid var(--border-color); border-radius: 8px; height: 50px; }
-        .qty-selector button { width: 45px; background: transparent; border: none; font-size:1.2rem; cursor:pointer;}
-        .qty-selector input { width: 50px; border: none; text-align: center; font-weight: 700;}
+        .thumb-swiper-container { width: 20%; height: 100%; }
+        .thumb-item-premium { width: 100%; height: 90px; margin-bottom: 10px; border-radius: 8px; border: 2px solid transparent; overflow: hidden; cursor: pointer; }
+        .thumb-item-premium img { width: 100%; height: 100%; object-fit: cover; }
+        .thumb-item-premium.active { border-color: var(--primary-color); }
+
+        /* Content Information Setup */
+        .info-panel { display: flex; flex-direction: column; }
+        .info-panel .cat-name { color: var(--primary-color); font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1.5px; margin-bottom: 8px;}
+        .info-panel .product-title { font-size: 2.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 15px; line-height: 1.3;}
+        .info-panel .price-box { margin-bottom: 25px; display: flex; align-items: baseline; gap: 15px; }
+        .info-panel .price-box .price { font-size: 2rem; color: var(--danger); font-weight: 700; }
+        .info-panel .price-box .old-price { font-size: 1.2rem; text-decoration: line-through; color: var(--text-muted); }
+
+        /* Variant Selectors: Size & Color */
+        .variant-section { margin-bottom: 25px; }
+        .variant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .variant-header label { font-size: 1.1rem; font-weight: 600; color: var(--text-main); }
+        .selected-variant-text { color: var(--text-muted); font-size: 0.95rem; }
         
-        .btn-add { flex: 1; border: 2px solid var(--primary-color); color: var(--primary-color); font-weight: bold; background:#fff; border-radius:8px;}
-        .btn-buy { width: 100%; height: 50px; border: none; background: var(--primary-color); color: #fff; font-weight: bold; border-radius:8px; font-size:1.1rem; cursor:pointer;}
-        @media(max-width: 768px){ .product-main-grid { grid-template-columns: 1fr; } }
+        .options-flex { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        /* Sizes Box */
+        .size-btn-modern { width: 55px; height: 55px; border: 2px solid #ddd; background: #fff; color: var(--text-main); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .size-btn-modern:hover { border-color: var(--text-main); }
+        .size-btn-modern.active { background: var(--text-main); color: #fff; border-color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .size-btn-modern.disabled { background: #f9f9f9; color: #ccc; border-color: #eee; cursor: not-allowed; text-decoration: line-through; }
+        
+        /* Color Box */
+        .color-btn-modern { padding: 10px 20px; border: 2px solid #ddd; background: #fff; color: var(--text-main); border-radius: 30px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+        .color-btn-modern:hover { border-color: var(--text-main); }
+        .color-btn-modern.active { background: var(--text-main); color: #fff; border-color: var(--text-main); }
+
+        /* Status & Quantity */
+        .status-badge-live { display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-bottom: 30px; background: rgba(0,0,0,0.04); padding: 8px 15px; border-radius: 6px; }
+
+        /* Primary Action Buttons Matrix */
+        .cart-action-matrix { display: flex; gap: 15px; margin-bottom: 40px; }
+        .qty-controls { display: flex; align-items: center; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; width: 130px;}
+        .qty-controls button { width: 40px; height: 50px; background: #fff; border: none; font-size: 1.5rem; cursor: pointer; }
+        .qty-controls input { width: 50px; height: 50px; border: none; text-align: center; font-size: 1.1rem; font-weight: 700; background: #fff;}
+        
+        .huge-action-btn { flex: 1; height: 54px; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px;}
+        .btn-black-cart { background: #111; color: #fff; }
+        .btn-black-cart:hover { background: #333; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .btn-theme-buy { background: var(--primary-color); color: #fff; }
+        .btn-theme-buy:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(46, 125, 50, 0.3); }
+
+        /* Description Minimal Area */
+        .desc-box { padding: 25px 0; border-top: 1px solid var(--border-color); }
+        .desc-box h4 { margin-bottom: 15px; font-size: 1.3rem; }
+        .desc-box p { color: #555; line-height: 1.8; font-size: 0.95rem; }
+
+        /* Mobile specific re-design */
+        @media (max-width: 992px) {
+            .product-page-wrapper { grid-template-columns: 1fr; gap: 20px; }
+            .premium-gallery-container { flex-direction: column; height: auto; gap:10px; }
+            .main-swiper-container { width: 100%; height: 400px; }
+            .thumb-swiper-container { width: 100%; height: auto; display: flex; overflow-x: auto; gap: 10px;}
+            .thumb-item-premium { width: 80px; flex-shrink: 0; }
+            .info-panel .product-title { font-size: 1.6rem; }
+            .cart-action-matrix { flex-wrap: wrap; }
+            .huge-action-btn { width: 100%; flex: auto;}
+        }
     </style>
 </head>
 <body>
 
+    <!-- Header Setup -->
     <header class="header">
         <div class="container navbar">
             <div class="logo"><a href="index.html"><h2>Ghorer<span>Bazar</span></h2></a></div>
@@ -43,63 +100,84 @@
         </div>
     </header>
 
-    <main class="container product-details-section">
+    <main class="container">
         
-        <div id="product-loading" style="text-align:center; padding: 50px; font-size: 1.2rem;">
-            <i class="fas fa-spinner fa-spin"></i> Retrieving Design...
+        <!-- Center Loading Graphic -->
+        <div id="product-loading" style="text-align:center; padding: 100px 20px; font-size: 1.3rem; color: #888;">
+            <i class="fas fa-circle-notch fa-spin"></i> Loading Trendy Details...
         </div>
 
-        <div id="product-content" style="display: none;">
-            <div class="product-main-grid">
-                
-                <!-- Product Image Viewer -->
-                <div>
-                    <div class="main-img-container">
-                        <img id="main-image" src="" alt="Product">
-                    </div>
-                    <div class="thumb-gallery" id="thumb-gallery"></div>
+        <div class="product-page-wrapper" id="product-content" style="display: none;">
+            
+            <!-- Left Side: Fast Smooth Images Matrix -->
+            <div class="premium-gallery-container">
+                <div class="main-swiper-container">
+                    <img id="main-image" src="" alt="Clothing Preview">
                 </div>
-
-                <!-- Product Information & Logic -->
-                <div class="product-info-wrap">
-                    <span class="product-details-subtitle" id="pd-category" style="color:var(--text-muted); font-size:0.9rem;">Apparel</span>
-                    <h1 class="product-title-large" id="pd-title">Fashion Product</h1>
-                    
-                    <div class="price-wrap">
-                        <span class="price-new" id="pd-price">৳0</span>
-                    </div>
-
-                    <!-- Size Selection Section -->
-                    <span class="product-details-subtitle">Select Size:</span>
-                    <div class="size-selector" id="size-options-container">
-                        <!-- S, M, L will be built from js based on DB stock -->
-                    </div>
-
-                    <!-- Status Indicator showing live inventory data -->
-                    <div class="stock-indicator" id="live-stock-text" style="color:var(--text-muted);">
-                        Please select a size to view availability.
-                    </div>
-
-                    <!-- Description Mini -->
-                    <p style="color: var(--text-muted); line-height:1.6; margin-bottom:20px;" id="pd-short-desc"></p>
-
-                    <!-- Add & Cart Box -->
-                    <div class="action-area">
-                        <div class="qty-selector">
-                            <button id="pd-qty-minus">-</button>
-                            <input type="text" id="pd-qty-input" value="1" readonly>
-                            <button id="pd-qty-plus">+</button>
-                        </div>
-                        <button class="btn-add" id="btn-add-to-cart"><i class="fas fa-shopping-bag"></i> Add To Bag</button>
-                    </div>
-                    
-                    <button class="btn-buy" id="btn-buy-now"><i class="fas fa-bolt"></i> Order Now</button>
+                <!-- Support for infinite/10+ uploads thumbnails natively -->
+                <div class="thumb-swiper-container" id="thumb-gallery">
+                    <!-- Populated dynamically via JS -->
                 </div>
             </div>
 
-            <!-- Detail Tabs -->
-            <div style="border-top:1px solid #ddd; margin-top:20px; padding-top:20px;" id="tab-desc">
-                <!-- Full DB details mapped here -->
+            <!-- Right Side: Interactive Data Selection & Cart logic -->
+            <div class="info-panel">
+                <div class="cat-name" id="pd-category">CLOTHING & APPAREL</div>
+                <h1 class="product-title" id="pd-title">Fashionable Comfort Apparel</h1>
+                
+                <div class="price-box">
+                    <div class="price" id="pd-price">৳0</div>
+                    <div class="old-price" id="pd-old-price" style="display: none;">৳0</div>
+                </div>
+
+                <!-- Variant Selection #1: SIZES -->
+                <div class="variant-section">
+                    <div class="variant-header">
+                        <label>1. Select Size</label>
+                        <span class="selected-variant-text" id="selected-size-text">None</span>
+                    </div>
+                    <div class="options-flex" id="size-options-container">
+                        <!-- Populated by JS based on actual Stock! -->
+                    </div>
+                </div>
+
+                <!-- Variant Selection #2: COLORS (New Added Module) -->
+                <div class="variant-section">
+                    <div class="variant-header">
+                        <label>2. Choose Color</label>
+                        <span class="selected-variant-text" id="selected-color-text">None</span>
+                    </div>
+                    <div class="options-flex" id="color-options-container">
+                        <!-- Standard specific text-box pill styling for clarity across diverse fashion models -->
+                    </div>
+                </div>
+
+                <!-- Simple Notification text acting on combined choices-->
+                <div class="status-badge-live" id="live-stock-text">
+                    <i class="fas fa-info-circle"></i> Pick a Size and Color
+                </div>
+
+                <!-- Dynamic Functional Control Board-->
+                <div class="cart-action-matrix">
+                    <div class="qty-controls">
+                        <button id="pd-qty-minus">-</button>
+                        <input type="number" id="pd-qty-input" value="1" min="1" readonly>
+                        <button id="pd-qty-plus">+</button>
+                    </div>
+                    <button class="huge-action-btn btn-black-cart" id="btn-add-to-cart">
+                        <i class="fas fa-shopping-cart"></i> Add to Bag
+                    </button>
+                    <button class="huge-action-btn btn-theme-buy" id="btn-buy-now">
+                        <i class="fas fa-bolt"></i> Buy Now
+                    </button>
+                </div>
+
+                <!-- Extensive Detailed Clothing Content Data Info Bottom Placement -->
+                <div class="desc-box">
+                    <h4>Product Description</h4>
+                    <p id="tab-desc">Information processing...</p>
+                </div>
+
             </div>
         </div>
 
