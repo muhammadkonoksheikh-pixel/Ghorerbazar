@@ -9,10 +9,44 @@
     <link rel="stylesheet" href="assets/css/admin.css">
     <style>
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .preview-area { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-        .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+        .variant-card {
+            background: #f8f9fa;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .variant-card .remove-btn {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .sizes-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .sizes-row label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        .sizes-row input {
+            text-align: center;
+        }
+        .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); margin-top: 10px; }
         .switch-container { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-        .upload-note { font-size: 0.85rem; color: var(--warning); margin-top: 5px; font-weight: 500;}
     </style>
 </head>
 <body>
@@ -29,6 +63,7 @@
                 <li><a href="categories.html"><i class="fas fa-list"></i> Categories</a></li>
                 <li><a href="users.html"><i class="fas fa-users"></i> Customers</a></li>
                 <li><a href="banners.html"><i class="fas fa-images"></i> Banners</a></li>
+                <li><a href="#" id="admin-logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>
 
@@ -42,11 +77,15 @@
 
             <div class="page-content">
                 <div class="page-header">
-                    <h2>Edit Product</h2>
-                    <a href="products.html" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back to Products</a>
+                    <h2>Edit Clothing Product</h2>
+                    <a href="products.html" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
                 </div>
 
-                <div class="card" id="edit-form-container" style="display: none;">
+                <div id="loading-box" style="text-align:center; padding:50px;">
+                    <i class="fas fa-spinner fa-spin"></i> Retrieving Product Data...
+                </div>
+
+                <div class="card" id="form-box" style="display:none;">
                     <form id="edit-product-form">
                         <div class="form-row">
                             <div class="form-group">
@@ -72,17 +111,19 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>Update Images (Optional - Leave blank to keep existing images)</label>
-                            <input type="file" id="e-images" class="form-control" multiple accept="image/*">
-                            <p class="upload-note">If you select new images, the old ones will be replaced.</p>
-                            <div class="preview-area" id="image-preview">
-                                <!-- Existing images will load here -->
+                        <!-- Dynamic Color and Size Variants Area -->
+                        <div style="margin-bottom: 25px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+                                <h3 style="font-size:1.1rem; color:var(--primary);">Product Color & Size Stock</h3>
+                                <button type="button" class="btn btn-primary" id="add-variant-btn" style="padding: 6px 12px; font-size:0.85rem;"><i class="fas fa-plus"></i> Add Color Variant</button>
+                            </div>
+                            <div id="variants-container">
+                                <!-- Existing variant cards loaded here -->
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label>Description *</label>
+                            <label>Product Description *</label>
                             <textarea id="e-desc" class="form-control" rows="5" required></textarea>
                         </div>
 
@@ -97,13 +138,10 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary" id="update-btn" style="width:100%; padding: 12px; margin-top:20px; justify-content:center; font-size:1.1rem;">
+                        <button type="submit" class="btn btn-primary" id="submit-btn" style="width:100%; padding: 14px; margin-top:20px; justify-content:center; font-size:1.1rem;">
                             Update Product <i class="fas fa-save"></i>
                         </button>
                     </form>
-                </div>
-                <div id="loading-box" style="text-align:center; padding:50px; font-size:1.2rem;">
-                    <i class="fas fa-spinner fa-spin"></i> Loading product details...
                 </div>
             </div>
         </main>
@@ -116,127 +154,243 @@
         import { doc, getDoc, updateDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dfiigto8h/image/upload';
-        const UPLOAD_PRESET = 'ghorer_bazar_preset'; // Replace if you changed it
+        const UPLOAD_PRESET = 'ghorer_bazar_preset';
 
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
 
-        if (!productId) window.location.href = 'products.html';
+        if(!productId) window.location.href = 'products.html';
 
         const catSelect = document.getElementById('e-category');
-        const imgInput = document.getElementById('e-images');
-        const previewArea = document.getElementById('image-preview');
+        const variantsContainer = document.getElementById('variants-container');
+        const addVariantBtn = document.getElementById('add-variant-btn');
         const form = document.getElementById('edit-product-form');
-        const updateBtn = document.getElementById('update-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const loadingBox = document.getElementById('loading-box');
+        const formBox = document.getElementById('form-box');
 
-        let existingImages = [];
+        let variantCount = 0;
 
-        async function initData() {
+        // Load Categories
+        async function loadCategories() {
             try {
-                // Load Categories
-                const catSnap = await getDocs(collection(db, "categories"));
-                catSnap.forEach(cDoc => {
+                const snap = await getDocs(collection(db, "categories"));
+                snap.forEach(doc => {
                     const opt = document.createElement('option');
-                    opt.value = cDoc.id;
-                    opt.text = cDoc.data().name;
-                    opt.setAttribute('data-name', cDoc.data().name);
+                    opt.value = doc.id;
+                    opt.text = doc.data().name;
+                    opt.setAttribute('data-name', doc.data().name);
                     catSelect.appendChild(opt);
                 });
-
-                // Load Product
-                const pDocRef = doc(db, "products", productId);
-                const pSnap = await getDoc(pDocRef);
-                if (pSnap.exists()) {
-                    const pData = pSnap.data();
-                    document.getElementById('e-name').value = pData.name;
-                    catSelect.value = pData.categoryId;
-                    document.getElementById('e-price').value = pData.price;
-                    document.getElementById('e-old-price').value = pData.oldPrice || '';
-                    document.getElementById('e-desc').value = pData.description;
-                    document.getElementById('e-featured').checked = pData.isFeatured || false;
-                    document.getElementById('e-flash').checked = pData.isFlashSale || false;
-                    
-                    existingImages = pData.images || [];
-                    existingImages.forEach(img => {
-                        const imgEl = document.createElement('img');
-                        imgEl.src = img;
-                        imgEl.className = 'preview-img';
-                        previewArea.appendChild(imgEl);
-                    });
-
-                    document.getElementById('loading-box').style.display = 'none';
-                    document.getElementById('edit-form-container').style.display = 'block';
-                } else {
-                    Swal.fire('Error', 'Product not found', 'error').then(()=>window.location.href='products.html');
-                }
             } catch (e) {
                 console.error(e);
             }
         }
-        initData();
 
-        // Image Preview Override
-        imgInput.addEventListener('change', () => {
-            previewArea.innerHTML = '';
-            Array.from(imgInput.files).forEach(file => {
+        // Add Variant Card Function
+        window.addVariantCard = function(existingData = null) {
+            variantCount++;
+            const card = document.createElement('div');
+            card.className = 'variant-card';
+            card.id = `variant-${variantCount}`;
+            
+            const colorName = existingData ? existingData.colorName : '';
+            const imageUrl = existingData ? existingData.imageUrl : '';
+            const fileRequired = existingData ? '' : 'required';
+            
+            const sVal = existingData ? (existingData.sizes.S || 0) : 0;
+            const mVal = existingData ? (existingData.sizes.M || 0) : 0;
+            const lVal = existingData ? (existingData.sizes.L || 0) : 0;
+            const xlVal = existingData ? (existingData.sizes.XL || 0) : 0;
+            const xxlVal = existingData ? (existingData.sizes.XXL || 0) : 0;
+
+            card.innerHTML = `
+                <button type="button" class="remove-btn" onclick="document.getElementById('variant-${variantCount}').remove()"><i class="fas fa-trash"></i> Remove</button>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Color Name *</label>
+                        <input type="text" class="form-control var-color" required value="${colorName}" placeholder="e.g. Navy Blue">
+                    </div>
+                    <div class="form-group">
+                        <label>Color Specific Image (Select file only to change)</label>
+                        <input type="file" class="form-control var-file" ${fileRequired} accept="image/*" onchange="previewVariantImage(this, 'img-preview-${variantCount}')">
+                        <input type="hidden" class="var-old-url" value="${imageUrl}">
+                        <img id="img-preview-${variantCount}" src="${imageUrl}" class="preview-img" style="display: ${imageUrl ? 'block' : 'none'};">
+                    </div>
+                </div>
+                <div class="sizes-row">
+                    <div>
+                        <label>S Stock</label>
+                        <input type="number" class="form-control var-s" value="${sVal}" min="0" required>
+                    </div>
+                    <div>
+                        <label>M Stock</label>
+                        <input type="number" class="form-control var-m" value="${mVal}" min="0" required>
+                    </div>
+                    <div>
+                        <label>L Stock</label>
+                        <input type="number" class="form-control var-l" value="${lVal}" min="0" required>
+                    </div>
+                    <div>
+                        <label>XL Stock</label>
+                        <input type="number" class="form-control var-xl" value="${xlVal}" min="0" required>
+                    </div>
+                    <div>
+                        <label>XXL Stock</label>
+                        <input type="number" class="form-control var-xxl" value="${xxlVal}" min="0" required>
+                    </div>
+                </div>
+            `;
+            variantsContainer.appendChild(card);
+        };
+
+        window.previewVariantImage = function(input, previewId) {
+            const preview = document.getElementById(previewId);
+            if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'preview-img';
-                    previewArea.appendChild(img);
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
                 }
-                reader.readAsDataURL(file);
-            });
-        });
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
 
-        // Submit Form
+        addVariantBtn.addEventListener('click', () => addVariantCard());
+
+        // Load Existing Product Details
+        async function loadProductData() {
+            await loadCategories();
+            try {
+                const docSnap = await getDoc(doc(db, "products", productId));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    document.getElementById('e-name').value = data.name;
+                    catSelect.value = data.categoryId;
+                    document.getElementById('e-price').value = data.price;
+                    document.getElementById('e-old-price').value = data.oldPrice || '';
+                    document.getElementById('e-desc').value = data.description;
+                    document.getElementById('e-featured').checked = data.isFeatured || false;
+                    document.getElementById('e-flash').checked = data.isFlashSale || false;
+
+                    // Load Variants dynamically
+                    const variantsList = data.variants || [];
+                    if (variantsList.length > 0) {
+                        variantsList.forEach(v => {
+                            addVariantCard(v);
+                        });
+                    } else {
+                        // Fallback empty card
+                        addVariantCard();
+                    }
+
+                    loadingBox.style.display = 'none';
+                    formBox.style.display = 'block';
+                } else {
+                    Swal.fire('Error', 'Product not found', 'error').then(()=>window.location.href='products.html');
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        loadProductData();
+
+        // Submit Edited Product Data
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const files = imgInput.files;
 
-            updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-            updateBtn.disabled = true;
+            const cards = document.querySelectorAll('.variant-card');
+            if (cards.length === 0) {
+                Swal.fire('Error', 'Please keep or add at least one color variant.', 'error');
+                return;
+            }
+
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            submitBtn.disabled = true;
 
             try {
-                let finalImages = existingImages;
+                const variantsData = [];
+                const globalImages = [];
 
-                // Upload new images if selected
-                if (files.length > 0) {
-                    finalImages = [];
-                    for (let i = 0; i < files.length; i++) {
+                for (let card of cards) {
+                    const colorName = card.querySelector('.var-color').value.trim();
+                    const fileInput = card.querySelector('.var-file');
+                    const oldUrl = card.querySelector('.var-old-url').value;
+                    const file = fileInput.files[0];
+
+                    const sStock = parseInt(card.querySelector('.var-s').value || 0);
+                    const mStock = parseInt(card.querySelector('.var-m').value || 0);
+                    const lStock = parseInt(card.querySelector('.var-l').value || 0);
+                    const xlStock = parseInt(card.querySelector('.var-xl').value || 0);
+                    const xxlStock = parseInt(card.querySelector('.var-xxl').value || 0);
+
+                    let finalUrl = oldUrl;
+
+                    // If a new file is uploaded for this color
+                    if (file) {
                         const formData = new FormData();
-                        formData.append('file', files[i]);
+                        formData.append('file', file);
                         formData.append('upload_preset', UPLOAD_PRESET);
                         formData.append('folder', 'products');
 
                         const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
                         const data = await res.json();
-                        
-                        if (data.secure_url) {
-                            finalImages.push(data.secure_url);
+
+                        if (!data.secure_url) {
+                            throw new Error(`Upload failed for color variant: ${colorName}`);
                         }
+                        finalUrl = data.secure_url;
                     }
+
+                    globalImages.push(finalUrl);
+
+                    variantsData.push({
+                        colorName: colorName,
+                        imageUrl: finalUrl,
+                        sizes: {
+                            S: sStock,
+                            M: mStock,
+                            L: lStock,
+                            XL: xlStock,
+                            XXL: xxlStock
+                        }
+                    });
                 }
 
+                // Compute size totals
+                const totalSizesMap = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
+                variantsData.forEach(v => {
+                    totalSizesMap.S += v.sizes.S;
+                    totalSizesMap.M += v.sizes.M;
+                    totalSizesMap.L += v.sizes.L;
+                    totalSizesMap.XL += v.sizes.XL;
+                    totalSizesMap.XXL += v.sizes.XXL;
+                });
+
                 const catOption = catSelect.options[catSelect.selectedIndex];
-                const updatedData = {
+
+                const updatedProductData = {
                     name: document.getElementById('e-name').value.trim(),
                     categoryId: catSelect.value,
                     categoryName: catOption.getAttribute('data-name'),
                     price: parseFloat(document.getElementById('e-price').value),
                     oldPrice: document.getElementById('e-old-price').value ? parseFloat(document.getElementById('e-old-price').value) : null,
                     description: document.getElementById('e-desc').value.trim(),
-                    images: finalImages,
+                    images: globalImages,
+                    variants: variantsData,
+                    sizes: totalSizesMap,
                     isFeatured: document.getElementById('e-featured').checked,
                     isFlashSale: document.getElementById('e-flash').checked,
                     updatedAt: serverTimestamp()
                 };
 
-                await updateDoc(doc(db, "products", productId), updatedData);
-                
+                await updateDoc(doc(db, "products", productId), updatedProductData);
+
                 Swal.fire({
-                    icon: 'success', title: 'Updated!', text: 'Product updated successfully.'
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: 'Product successfully updated.'
                 }).then(() => {
                     window.location.href = 'products.html';
                 });
@@ -244,8 +398,8 @@
             } catch (error) {
                 console.error(error);
                 Swal.fire('Error', error.message, 'error');
-                updateBtn.innerHTML = 'Update Product <i class="fas fa-save"></i>';
-                updateBtn.disabled = false;
+                submitBtn.innerHTML = 'Update Product <i class="fas fa-save"></i>';
+                submitBtn.disabled = false;
             }
         });
     </script>
