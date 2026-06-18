@@ -124,7 +124,6 @@
             </div>
             <p>Create a new account to get started.</p>
 
-            <!-- onsubmit="event.preventDefault();" to stop page reload completely -->
             <form id="register-form" onsubmit="event.preventDefault();">
                 <div class="form-group">
                     <input type="text" id="name" required placeholder="Full Name">
@@ -164,7 +163,7 @@
         import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); // Extra safety against refresh
+            e.preventDefault();
             
             const name = document.getElementById('name').value.trim();
             const phone = document.getElementById('phone').value.trim();
@@ -189,7 +188,10 @@
                 // 2. Update Auth Profile
                 await updateProfile(user, { displayName: name });
 
-                // 3. Save to Firestore DB
+                // 3. Generate Auto Avatar based on Name
+                const autoAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2e7d32&color=fff&bold=true`;
+
+                // 4. Save to Firestore DB
                 await setDoc(doc(db, "users", user.uid), {
                     uid: user.uid,
                     name: name,
@@ -198,7 +200,7 @@
                     address: "",
                     district: "",
                     upazila: "",
-                    photoURL: "",
+                    photoURL: autoAvatar,
                     createdAt: serverTimestamp(),
                     role: "user"
                 });
