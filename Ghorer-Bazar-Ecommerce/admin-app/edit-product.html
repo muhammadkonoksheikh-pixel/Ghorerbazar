@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Product - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <style>
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .preview-area { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+        .switch-container { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .upload-note { font-size: 0.85rem; color: var(--warning); margin-top: 5px; font-weight: 500;}
+    </style>
+</head>
+<body>
+
+    <div class="admin-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Ghorer<span>Bazar</span></h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="orders.html"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li><a href="products.html" class="active"><i class="fas fa-box"></i> Products</a></li>
+                <li><a href="categories.html"><i class="fas fa-list"></i> Categories</a></li>
+                <li><a href="users.html"><i class="fas fa-users"></i> Customers</a></li>
+                <li><a href="banners.html"><i class="fas fa-images"></i> Banners</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></div>
+                <div class="topbar-right">
+                    <div class="admin-profile"><span id="admin-name">Admin</span></div>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div class="page-header">
+                    <h2>Edit Product</h2>
+                    <a href="products.html" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back to Products</a>
+                </div>
+
+                <div class="card" id="edit-form-container" style="display: none;">
+                    <form id="edit-product-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Product Name *</label>
+                                <input type="text" id="e-name" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="e-category" class="form-control" required>
+                                    <option value="">Select Category</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Selling Price (৳) *</label>
+                                <input type="number" id="e-price" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Old Price (৳) (Optional)</label>
+                                <input type="number" id="e-old-price" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Update Images (Optional - Leave blank to keep existing images)</label>
+                            <input type="file" id="e-images" class="form-control" multiple accept="image/*">
+                            <p class="upload-note">If you select new images, the old ones will be replaced.</p>
+                            <div class="preview-area" id="image-preview">
+                                <!-- Existing images will load here -->
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Description *</label>
+                            <textarea id="e-desc" class="form-control" rows="5" required></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group switch-container">
+                                <input type="checkbox" id="e-featured" style="width:18px; height:18px;">
+                                <label for="e-featured" style="margin-bottom:0;">Featured Product</label>
+                            </div>
+                            <div class="form-group switch-container">
+                                <input type="checkbox" id="e-flash" style="width:18px; height:18px;">
+                                <label for="e-flash" style="margin-bottom:0;">Add to Flash Sale</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="update-btn" style="width:100%; padding: 12px; margin-top:20px; justify-content:center; font-size:1.1rem;">
+                            Update Product <i class="fas fa-save"></i>
+                        </button>
+                    </form>
+                </div>
+                <div id="loading-box" style="text-align:center; padding:50px; font-size:1.2rem;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading product details...
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="assets/js/admin-auth.js"></script>
+    <script type="module">
+        import { db } from './assets/js/firebase-config.js';
+        import { doc, getDoc, updateDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dtmvxrmwg/image/upload';
+        const UPLOAD_PRESET = 'ghorer_bazar_preset'; // Replace if you changed it
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        if (!productId) window.location.href = 'products.html';
+
+        const catSelect = document.getElementById('e-category');
+        const imgInput = document.getElementById('e-images');
+        const previewArea = document.getElementById('image-preview');
+        const form = document.getElementById('edit-product-form');
+        const updateBtn = document.getElementById('update-btn');
+
+        let existingImages = [];
+
+        async function initData() {
+            try {
+                // Load Categories
+                const catSnap = await getDocs(collection(db, "categories"));
+                catSnap.forEach(cDoc => {
+                    const opt = document.createElement('option');
+                    opt.value = cDoc.id;
+                    opt.text = cDoc.data().name;
+                    opt.setAttribute('data-name', cDoc.data().name);
+                    catSelect.appendChild(opt);
+                });
+
+                // Load Product
+                const pDocRef = doc(db, "products", productId);
+                const pSnap = await getDoc(pDocRef);
+                if (pSnap.exists()) {
+                    const pData = pSnap.data();
+                    document.getElementById('e-name').value = pData.name;
+                    catSelect.value = pData.categoryId;
+                    document.getElementById('e-price').value = pData.price;
+                    document.getElementById('e-old-price').value = pData.oldPrice || '';
+                    document.getElementById('e-desc').value = pData.description;
+                    document.getElementById('e-featured').checked = pData.isFeatured || false;
+                    document.getElementById('e-flash').checked = pData.isFlashSale || false;
+                    
+                    existingImages = pData.images || [];
+                    existingImages.forEach(img => {
+                        const imgEl = document.createElement('img');
+                        imgEl.src = img;
+                        imgEl.className = 'preview-img';
+                        previewArea.appendChild(imgEl);
+                    });
+
+                    document.getElementById('loading-box').style.display = 'none';
+                    document.getElementById('edit-form-container').style.display = 'block';
+                } else {
+                    Swal.fire('Error', 'Product not found', 'error').then(()=>window.location.href='products.html');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        initData();
+
+        // Image Preview Override
+        imgInput.addEventListener('change', () => {
+            previewArea.innerHTML = '';
+            Array.from(imgInput.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'preview-img';
+                    previewArea.appendChild(img);
+                }
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Submit Form
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const files = imgInput.files;
+
+            updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            updateBtn.disabled = true;
+
+            try {
+                let finalImages = existingImages;
+
+                // Upload new images if selected
+                if (files.length > 0) {
+                    finalImages = [];
+                    for (let i = 0; i < files.length; i++) {
+                        const formData = new FormData();
+                        formData.append('file', files[i]);
+                        formData.append('upload_preset', UPLOAD_PRESET);
+                        formData.append('folder', 'products');
+
+                        const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+                        const data = await res.json();
+                        
+                        if (data.secure_url) {
+                            finalImages.push(data.secure_url);
+                        }
+                    }
+                }
+
+                const catOption = catSelect.options[catSelect.selectedIndex];
+                const updatedData = {
+                    name: document.getElementById('e-name').value.trim(),
+                    categoryId: catSelect.value,
+                    categoryName: catOption.getAttribute('data-name'),
+                    price: parseFloat(document.getElementById('e-price').value),
+                    oldPrice: document.getElementById('e-old-price').value ? parseFloat(document.getElementById('e-old-price').value) : null,
+                    description: document.getElementById('e-desc').value.trim(),
+                    images: finalImages,
+                    isFeatured: document.getElementById('e-featured').checked,
+                    isFlashSale: document.getElementById('e-flash').checked,
+                    updatedAt: serverTimestamp()
+                };
+
+                await updateDoc(doc(db, "products", productId), updatedData);
+                
+                Swal.fire({
+                    icon: 'success', title: 'Updated!', text: 'Product updated successfully.'
+                }).then(() => {
+                    window.location.href = 'products.html';
+                });
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', error.message, 'error');
+                updateBtn.innerHTML = 'Update Product <i class="fas fa-save"></i>';
+                updateBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
