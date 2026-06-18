@@ -826,3 +826,73 @@
            padding-bottom: 60px; /* Space for bottom nav */
        }
    }
+/* ==========================================================================
+   Clothing Store Added Customizations (Sizes & UI updates)
+   ========================================================================== */
+
+/* Size Selection Box in Product Details Page */
+.product-details-subtitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: block;
+    color: var(--text-main);
+    text-transform: uppercase;
+}
+
+.size-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.size-btn {
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    background: var(--white);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-main);
+    transition: var(--transition);
+}
+
+.size-btn:hover:not(.out-of-stock) {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.size-btn.active {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: var(--white);
+    box-shadow: 0 4px 10px rgba(46, 125, 50, 0.2);
+}
+
+.size-btn.out-of-stock {
+    background: #f0f0f0;
+    color: #b0b0b0;
+    border-color: #ddd;
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+
+.stock-indicator {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stock-ok { color: var(--primary-color); }
+.stock-low { color: var(--secondary-color); }
+.stock-out { color: var(--danger); }
