@@ -1,0 +1,24 @@
+================================================
+CLOUDINARY SETUP GUIDE FOR GHORER BAZAR
+================================================
+
+Since this project does not use a backend server (Node.js/PHP), we upload images directly from the browser to Cloudinary using their "Unsigned Upload" feature.
+
+Step-by-step Setup:
+
+1. Sign Up / Log In to Cloudinary (https://cloudinary.com).
+2. Go to your Dashboard and note your "Cloud Name".
+   - Current Code uses Cloud Name: "dtmvxrmwg"
+   - If your cloud name is different, change "dtmvxrmwg" in `admin-app/add-product.html` and `admin-app/categories.html`.
+
+3. Enable Unsigned Uploads:
+   - Go to Cloudinary Settings (Gear Icon) > "Upload" tab.
+   - Scroll down to "Upload presets".
+   - Click "Add upload preset".
+   - Set "Upload preset name" to: ghorer_bazar_preset
+   - Set "Signing Mode" to: Unsigned
+   - Set "Folder" to: ghorer_bazar (Optional default folder).
+   - Click Save.
+
+That's it! 
+Now when the Admin adds a product or category image from the Admin Panel, it will directly upload to Cloudinary and return the secure URL to save in Firebase Firestore.
