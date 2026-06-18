@@ -14,29 +14,76 @@
         .track-header { text-align: center; margin-bottom: 40px; }
         .track-header h2 { font-size: 1.8rem; color: var(--primary-color); }
         
-        /* Search Form if no ID provided */
+        /* Search Form */
         .track-form { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; }
         .track-form input { padding: 12px 20px; border: 1px solid var(--border-color); border-radius: 8px; width: 60%; font-size: 1rem; outline: none; }
         .track-form input:focus { border-color: var(--primary-color); }
         
-        /* Timeline */
+        /* Timeline UI Setup */
         .timeline-container { display: none; }
-        .timeline { position: relative; margin: 40px 0; padding-left: 30px; }
-        .timeline::before { content: ''; position: absolute; left: 10px; top: 0; height: 100%; width: 4px; background: #e0e0e0; border-radius: 4px; }
+        .timeline { position: relative; margin: 40px 0 20px 0; padding-left: 35px; list-style: none; }
         
-        .timeline-item { position: relative; margin-bottom: 30px; }
-        .timeline-item::before { content: ''; position: absolute; left: -26px; top: 5px; width: 16px; height: 16px; border-radius: 50%; background: #e0e0e0; border: 3px solid var(--white); box-shadow: 0 0 0 2px #e0e0e0; z-index: 2; transition: var(--transition); }
+        .timeline-item { position: relative; margin-bottom: 35px; }
         
-        .timeline-item.active::before { background: var(--primary-color); box-shadow: 0 0 0 2px var(--primary-color); }
-        .timeline-item.active ~ .timeline-item::before { background: #e0e0e0; }
+        /* The Bullet (Circle) */
+        .timeline-item::before {
+            content: '\f00c';
+            font-family: 'Font Awesome 5 Free', 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute; left: -35px; top: 0;
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #e0e0e0; color: transparent;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 12px;
+            z-index: 2; transition: all 0.4s ease;
+        }
+        
+        /* The Line connecting items */
+        .timeline-item::after {
+            content: ''; position: absolute; left: -22px; top: 28px;
+            width: 3px; height: calc(100% + 7px);
+            background: #e0e0e0; z-index: 1; transition: all 0.4s ease;
+        }
+        .timeline-item:last-child::after { display: none; } /* Hide last line */
         
         .timeline-content { background: #f8f9fa; padding: 15px 20px; border-radius: 8px; border: 1px solid var(--border-color); position: relative; }
-        .timeline-content h4 { color: var(--text-main); margin-bottom: 5px; }
+        .timeline-content h4 { color: var(--text-main); margin-bottom: 5px; font-size: 1.05rem; }
         .timeline-content p { font-size: 0.9rem; color: var(--text-muted); }
         
-        .order-details-box { background: rgba(46, 125, 50, 0.05); border: 1px dashed var(--primary-color); padding: 20px; border-radius: 8px; margin-top: 30px; }
+        /* --- DYNAMIC STATES --- */
         
+        /* 1. Completed State (Green Bullet & Green Line) */
+        .timeline-item.completed::before {
+            background: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.2);
+        }
+        .timeline-item.completed::after {
+            background: var(--primary-color);
+        }
+
+        /* 2. Active/Current State (Orange Bullet & Gray Line) */
+        .timeline-item.active::before {
+            background: var(--secondary-color); /* Orange */
+            color: transparent; /* Hide tick mark for running process */
+            box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.2);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+        }
+        
+        .order-details-box { background: rgba(46, 125, 50, 0.05); border: 1px dashed var(--primary-color); padding: 20px; border-radius: 8px; margin-top: 30px; line-height: 1.8;}
         .loading { text-align: center; font-size: 1.2rem; color: var(--primary-color); display: none; }
+        
+        @media (max-width: 600px) {
+            .track-container { padding: 20px; }
+            .track-form { flex-direction: column; }
+            .track-form input, .track-form button { width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -54,12 +101,12 @@
         <div class="track-container">
             <div class="track-header">
                 <h2>Track Your Order</h2>
-                <p>Enter your Order ID below or select an order from "My Orders" to track its status.</p>
+                <p>Enter your Order ID below or select an order from "My Orders".</p>
             </div>
 
             <form class="track-form" id="track-form">
                 <input type="text" id="track-input" placeholder="e.g. GB-A1B2C3" required>
-                <button type="submit" class="btn btn-primary">Track</button>
+                <button type="submit" class="btn btn-primary">Track Order</button>
             </form>
 
             <div class="loading" id="track-loading"><i class="fas fa-spinner fa-spin"></i> Searching...</div>
@@ -69,39 +116,38 @@
                     <!-- Info Injected here -->
                 </div>
 
-                <div class="timeline" id="status-timeline">
-                    <!-- Default structure, classes manipulated via JS -->
-                    <div class="timeline-item" id="step-pending">
+                <ul class="timeline" id="status-timeline">
+                    <li class="timeline-item" id="step-pending">
                         <div class="timeline-content">
                             <h4>Order Placed (Pending)</h4>
                             <p>We have received your order.</p>
                         </div>
-                    </div>
-                    <div class="timeline-item" id="step-confirmed">
+                    </li>
+                    <li class="timeline-item" id="step-confirmed">
                         <div class="timeline-content">
                             <h4>Confirmed</h4>
                             <p>Your order and payment have been verified.</p>
                         </div>
-                    </div>
-                    <div class="timeline-item" id="step-processing">
+                    </li>
+                    <li class="timeline-item" id="step-processing">
                         <div class="timeline-content">
                             <h4>Processing / Packed</h4>
                             <p>Your order is being packed and prepared for dispatch.</p>
                         </div>
-                    </div>
-                    <div class="timeline-item" id="step-shipped">
+                    </li>
+                    <li class="timeline-item" id="step-shipped">
                         <div class="timeline-content">
                             <h4>Shipped</h4>
                             <p>Handed over to the delivery partner.</p>
                         </div>
-                    </div>
-                    <div class="timeline-item" id="step-delivered">
+                    </li>
+                    <li class="timeline-item" id="step-delivered">
                         <div class="timeline-content">
                             <h4>Delivered</h4>
-                            <p>Package has been delivered to your address.</p>
+                            <p>Package has been successfully delivered to your address.</p>
                         </div>
-                    </div>
-                </div>
+                    </li>
+                </ul>
             </div>
 
         </div>
@@ -121,7 +167,7 @@
         const loadingBox = document.getElementById('track-loading');
         const infoDisplay = document.getElementById('order-info-display');
 
-        // Steps
+        // Step hierarchy mapping
         const steps = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
 
         if (docId) {
@@ -174,40 +220,52 @@
             timelineContainer.style.display = 'block';
             
             infoDisplay.innerHTML = `
-                <strong>Order ID:</strong> ${data.orderId} <br>
+                <strong>Order ID:</strong> #${data.orderId} <br>
                 <strong>Total Amount:</strong> ৳${data.totalAmount} <br>
                 <strong>Payment Status:</strong> ${data.paymentStatus.toUpperCase()} <br>
                 <strong>Current Status:</strong> <span style="color:var(--primary-color); font-weight:bold;">${data.orderStatus.toUpperCase()}</span>
             `;
 
-            // Reset all
-            steps.forEach(s => document.getElementById(`step-${s}`).classList.remove('active'));
+            // Reset all classes
+            steps.forEach(s => {
+                const el = document.getElementById(`step-${s}`);
+                el.classList.remove('active', 'completed');
+            });
 
-            // Set Active State based on hierarchy
             const s = data.orderStatus.toLowerCase();
             
+            // Handle Cancellation Scenario
             if(s.includes('cancel')) {
-                infoDisplay.innerHTML += `<br><span style="color:red; font-weight:bold;">ORDER CANCELLED</span>`;
+                infoDisplay.innerHTML += `<br><span style="color:red; font-weight:bold; font-size: 1.2rem;">ORDER CANCELLED</span>`;
                 document.getElementById('status-timeline').style.display = 'none';
                 return;
             } else {
                 document.getElementById('status-timeline').style.display = 'block';
             }
 
-            document.getElementById('step-pending').classList.add('active');
-            
-            if(s.includes('confirm') || s.includes('process') || s.includes('pack') || s.includes('ship') || s.includes('deliver')) {
-                document.getElementById('step-confirmed').classList.add('active');
-            }
-            if(s.includes('process') || s.includes('pack') || s.includes('ship') || s.includes('deliver')) {
-                document.getElementById('step-processing').classList.add('active');
-            }
-            if(s.includes('ship') || s.includes('deliver')) {
-                document.getElementById('step-shipped').classList.add('active');
-            }
-            if(s.includes('deliver')) {
-                document.getElementById('step-delivered').classList.add('active');
-            }
+            // Determine Current Index
+            let currentIndex = 0; // Default pending
+            if(s.includes('confirm')) currentIndex = 1;
+            else if(s.includes('process') || s.includes('pack')) currentIndex = 2;
+            else if(s.includes('ship')) currentIndex = 3;
+            else if(s.includes('deliver')) currentIndex = 4;
+
+            // Apply Smart CSS Classes
+            steps.forEach((stepName, index) => {
+                const stepElement = document.getElementById(`step-${stepName}`);
+                
+                if (index < currentIndex) {
+                    // Past steps get green tick and green line
+                    stepElement.classList.add('completed');
+                } else if (index === currentIndex) {
+                    // If Delivered, mark as fully completed. Else, mark as actively processing (Orange).
+                    if(currentIndex === 4) {
+                        stepElement.classList.add('completed');
+                    } else {
+                        stepElement.classList.add('active');
+                    }
+                }
+            });
         }
     </script>
 </body>
