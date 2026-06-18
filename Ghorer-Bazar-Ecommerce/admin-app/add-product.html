@@ -9,10 +9,46 @@
     <link rel="stylesheet" href="assets/css/admin.css">
     <style>
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .preview-area { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-        .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+        .variant-card {
+            background: #f8f9fa;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .variant-card .remove-btn {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .sizes-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .sizes-row div {
+            text-align: center;
+        }
+        .sizes-row label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .sizes-row input {
+            text-align: center;
+        }
+        .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); margin-top: 10px; display: none; }
         .switch-container { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-        .upload-note { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -29,6 +65,7 @@
                 <li><a href="categories.html"><i class="fas fa-list"></i> Categories</a></li>
                 <li><a href="users.html"><i class="fas fa-users"></i> Customers</a></li>
                 <li><a href="banners.html"><i class="fas fa-images"></i> Banners</a></li>
+                <li><a href="#" id="admin-logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>
 
@@ -36,9 +73,7 @@
             <header class="topbar">
                 <div class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></div>
                 <div class="topbar-right">
-                    <div class="admin-profile">
-                        <span id="admin-name">Admin</span>
-                    </div>
+                    <div class="admin-profile"><span id="admin-name">Admin</span></div>
                 </div>
             </header>
 
@@ -53,13 +88,12 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Product Name *</label>
-                                <input type="text" id="p-name" class="form-control" required placeholder="e.g. Premium Honey">
+                                <input type="text" id="p-name" class="form-control" required placeholder="e.g. Premium Cotton Slim Fit Shirt">
                             </div>
                             <div class="form-group">
                                 <label>Category *</label>
                                 <select id="p-category" class="form-control" required>
                                     <option value="">Select Category</option>
-                                    <!-- Dynamic Categories -->
                                 </select>
                             </div>
                         </div>
@@ -71,20 +105,24 @@
                             </div>
                             <div class="form-group">
                                 <label>Old Price (৳) (Optional)</label>
-                                <input type="number" id="p-old-price" class="form-control" placeholder="0.00 (For discount strikethrough)">
+                                <input type="number" id="p-old-price" class="form-control" placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Color and Size Variants Area -->
+                        <div style="margin-bottom: 25px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+                                <h3 style="font-size:1.1rem; color:var(--primary);">Product Color & Size Stock</h3>
+                                <button type="button" class="btn btn-primary" id="add-variant-btn" style="padding: 6px 12px; font-size:0.85rem;"><i class="fas fa-plus"></i> Add Color Variant</button>
+                            </div>
+                            <div id="variants-container">
+                                <!-- Dynamic variant cards will be inserted here -->
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label>Product Images (Upload directly to Cloudinary) *</label>
-                            <input type="file" id="p-images" class="form-control" multiple accept="image/*" required>
-                            <p class="upload-note">Select up to 4 images. Ensure your Cloudinary unsigned preset "ghorer_bazar_preset" is active.</p>
-                            <div class="preview-area" id="image-preview"></div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Description *</label>
-                            <textarea id="p-desc" class="form-control" rows="5" required placeholder="Detailed product description..."></textarea>
+                            <label>Product Description *</label>
+                            <textarea id="p-desc" class="form-control" rows="5" required placeholder="Describe fabrics, stitching quality, fittings details..."></textarea>
                         </div>
 
                         <div class="form-row">
@@ -98,7 +136,7 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary" id="submit-btn" style="width:100%; padding: 12px; margin-top:20px; justify-content:center; font-size:1.1rem;">
+                        <button type="submit" class="btn btn-primary" id="submit-btn" style="width:100%; padding: 14px; margin-top:20px; justify-content:center; font-size:1.1rem;">
                             Save Product <i class="fas fa-save"></i>
                         </button>
                     </form>
@@ -113,15 +151,17 @@
         import { db } from './assets/js/firebase-config.js';
         import { collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // Cloudinary Settings
+        // Upgraded Cloudinary Credentials
         const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dfiigto8h/image/upload';
-        const UPLOAD_PRESET = 'ghorer_bazar_preset'; // You must create an unsigned upload preset in Cloudinary named this
+        const UPLOAD_PRESET = 'ghorer_bazar_preset';
 
         const catSelect = document.getElementById('p-category');
-        const imgInput = document.getElementById('p-images');
-        const previewArea = document.getElementById('image-preview');
+        const variantsContainer = document.getElementById('variants-container');
+        const addVariantBtn = document.getElementById('add-variant-btn');
         const form = document.getElementById('add-product-form');
         const submitBtn = document.getElementById('submit-btn');
+
+        let variantCount = 0;
 
         // Load Categories
         async function loadCategories() {
@@ -140,61 +180,140 @@
         }
         loadCategories();
 
-        // Image Preview
-        imgInput.addEventListener('change', () => {
-            previewArea.innerHTML = '';
-            Array.from(imgInput.files).forEach(file => {
+        // Add Dynamic Variant Card
+        function addVariantCard() {
+            variantCount++;
+            const card = document.createElement('div');
+            card.className = 'variant-card';
+            card.id = `variant-${variantCount}`;
+            card.innerHTML = `
+                <button type="button" class="remove-btn" onclick="document.getElementById('variant-${variantCount}').remove()"><i class="fas fa-trash"></i> Remove</button>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Color Name *</label>
+                        <input type="text" class="form-control var-color" required placeholder="e.g. Navy Blue">
+                    </div>
+                    <div class="form-group">
+                        <label>Color Specific Image *</label>
+                        <input type="file" class="form-control var-file" required accept="image/*" onchange="previewVariantImage(this, 'img-preview-${variantCount}')">
+                        <img id="img-preview-${variantCount}" class="preview-img">
+                    </div>
+                </div>
+                <div class="sizes-row">
+                    <div>
+                        <label>S Stock</label>
+                        <input type="number" class="form-control var-s" value="0" min="0" required>
+                    </div>
+                    <div>
+                        <label>M Stock</label>
+                        <input type="number" class="form-control var-m" value="0" min="0" required>
+                    </div>
+                    <div>
+                        <label>L Stock</label>
+                        <input type="number" class="form-control var-l" value="0" min="0" required>
+                    </div>
+                    <div>
+                        <label>XL Stock</label>
+                        <input type="number" class="form-control var-xl" value="0" min="0" required>
+                    </div>
+                    <div>
+                        <label>XXL Stock</label>
+                        <input type="number" class="form-control var-xxl" value="0" min="0" required>
+                    </div>
+                </div>
+            `;
+            variantsContainer.appendChild(card);
+        }
+
+        // Global functions mapped for inline elements inside dynamic templates
+        window.previewVariantImage = function(input, previewId) {
+            const preview = document.getElementById(previewId);
+            if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'preview-img';
-                    previewArea.appendChild(img);
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
                 }
-                reader.readAsDataURL(file);
-            });
-        });
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
 
-        // Submit Form
+        addVariantBtn.addEventListener('click', addVariantCard);
+        
+        // Add first variant card by default
+        addVariantCard();
+
+        // Form Submit
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const files = imgInput.files;
-            if (files.length === 0) {
-                Swal.fire('Error', 'Please select at least one image', 'error');
+
+            const cards = document.querySelectorAll('.variant-card');
+            if (cards.length === 0) {
+                Swal.fire('Error', 'Please add at least one color variant with stock.', 'error');
                 return;
             }
 
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading Images...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing & Uploading...';
             submitBtn.disabled = true;
 
             try {
-                // 1. Upload Images to Cloudinary
-                let uploadedUrls = [];
-                for (let i = 0; i < files.length; i++) {
+                const variantsData = [];
+                const globalImages = []; // Maintain images array at root level for home page display fallbacks
+                
+                // Upload each variant image to Cloudinary asynchronously
+                for (let card of cards) {
+                    const colorName = card.querySelector('.var-color').value.trim();
+                    const fileInput = card.querySelector('.var-file');
+                    const file = fileInput.files[0];
+
+                    // Sizes Mapping
+                    const sStock = parseInt(card.querySelector('.var-s').value || 0);
+                    const mStock = parseInt(card.querySelector('.var-m').value || 0);
+                    const lStock = parseInt(card.querySelector('.var-l').value || 0);
+                    const xlStock = parseInt(card.querySelector('.var-xl').value || 0);
+                    const xxlStock = parseInt(card.querySelector('.var-xxl').value || 0);
+
+                    // 1. Upload to Cloudinary
                     const formData = new FormData();
-                    formData.append('file', files[i]);
+                    formData.append('file', file);
                     formData.append('upload_preset', UPLOAD_PRESET);
                     formData.append('folder', 'products');
 
-                    const res = await fetch(CLOUDINARY_URL, {
-                        method: 'POST',
-                        body: formData
-                    });
+                    const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
                     const data = await res.json();
-                    
-                    if (data.secure_url) {
-                        uploadedUrls.push(data.secure_url);
-                    } else {
-                        throw new Error(data.error.message || 'Image upload failed');
+
+                    if (!data.secure_url) {
+                        throw new Error(`Upload failed for color variant: ${colorName}`);
                     }
+
+                    globalImages.push(data.secure_url);
+
+                    variantsData.push({
+                        colorName: colorName,
+                        imageUrl: data.secure_url,
+                        sizes: {
+                            S: sStock,
+                            M: mStock,
+                            L: lStock,
+                            XL: xlStock,
+                            XXL: xxlStock
+                        }
+                    });
                 }
 
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving to Database...';
+                // 2. Compute sizes totals for index product view fallbacks
+                const totalSizesMap = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
+                variantsData.forEach(v => {
+                    totalSizesMap.S += v.sizes.S;
+                    totalSizesMap.M += v.sizes.M;
+                    totalSizesMap.L += v.sizes.L;
+                    totalSizesMap.XL += v.sizes.XL;
+                    totalSizesMap.XXL += v.sizes.XXL;
+                });
 
-                // 2. Save to Firestore
                 const catOption = catSelect.options[catSelect.selectedIndex];
-                
+
+                // Save to Firestore
                 const productData = {
                     name: document.getElementById('p-name').value.trim(),
                     categoryId: catSelect.value,
@@ -202,7 +321,9 @@
                     price: parseFloat(document.getElementById('p-price').value),
                     oldPrice: document.getElementById('p-old-price').value ? parseFloat(document.getElementById('p-old-price').value) : null,
                     description: document.getElementById('p-desc').value.trim(),
-                    images: uploadedUrls,
+                    images: globalImages,  // Fallback visual list
+                    variants: variantsData, // Size/Color Mapping Object Array
+                    sizes: totalSizesMap,  // Total sizes across all variants
                     isFeatured: document.getElementById('p-featured').checked,
                     isFlashSale: document.getElementById('p-flash').checked,
                     createdAt: serverTimestamp(),
@@ -210,18 +331,18 @@
                 };
 
                 await addDoc(collection(db, "products"), productData);
-                
+
                 Swal.fire({
                     icon: 'success',
-                    title: 'Success!',
-                    text: 'Product added successfully.'
+                    title: 'Saved!',
+                    text: 'Clothing product successfully saved.'
                 }).then(() => {
                     window.location.href = 'products.html';
                 });
 
             } catch (error) {
                 console.error(error);
-                Swal.fire('Error', error.message || 'Something went wrong', 'error');
+                Swal.fire('Error', error.message, 'error');
                 submitBtn.innerHTML = 'Save Product <i class="fas fa-save"></i>';
                 submitBtn.disabled = false;
             }
