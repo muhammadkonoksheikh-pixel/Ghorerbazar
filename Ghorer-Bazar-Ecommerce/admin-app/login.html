@@ -4,85 +4,209 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - Ghorer Bazar</title>
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/admin.css">
     <style>
-        .admin-login-body {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        body {
+            background: radial-gradient(circle at top right, #111e16 0%, #0c0f12 100%);
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        /* Glowing background blobs */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(46, 125, 50, 0.15);
+            border-radius: 50%;
+            top: -50px;
+            right: -50px;
+            filter: blur(80px);
+            z-index: 0;
+        }
+        body::after {
+            content: '';
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            background: rgba(255, 152, 0, 0.08);
+            border-radius: 50%;
+            bottom: -50px;
+            left: -50px;
+            filter: blur(70px);
+            z-index: 0;
+        }
+        .login-wrapper {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            z-index: 10;
         }
         .login-card {
-            background: #fff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            width: 100%;
-            max-width: 400px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 45px 35px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
             text-align: center;
         }
         .login-header h2 {
-            color: var(--primary);
-            font-size: 2rem;
+            font-size: 2.2rem;
+            color: #4caf50;
+            font-weight: 700;
             margin-bottom: 5px;
+            letter-spacing: 0.5px;
         }
         .login-header h2 span {
-            color: var(--secondary);
+            color: #ff9800;
         }
         .login-header p {
-            color: var(--text-muted);
-            margin-bottom: 30px;
+            color: #8892b0;
+            margin-bottom: 35px;
             font-size: 0.9rem;
+            letter-spacing: 0.5px;
         }
         .form-group {
             text-align: left;
+            margin-bottom: 22px;
+            position: relative;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #8892b0;
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .input-icon-wrap {
+            position: relative;
+        }
+        .input-icon-wrap i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #556270;
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        .form-control {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #e2e8f0;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #4caf50;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.2);
+        }
+        .form-control:focus + i {
+            color: #4caf50;
         }
         .btn-login {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
             font-size: 1.1rem;
-            margin-top: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
             justify-content: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 125, 50, 0.3);
+            background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+        }
+        .security-badge {
+            margin-top: 25px;
+            color: #556270;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
     </style>
 </head>
-<body class="admin-login-body">
+<body>
 
-    <div class="login-card">
-        <div class="login-header">
-            <h2>Ghorer<span>Bazar</span></h2>
-            <p>Admin Control Panel</p>
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <h2>Ghorer<span>Bazar</span></h2>
+                <p>ADMIN CONTROL PANEL</p>
+            </div>
+
+            <!-- Form handles submit safely -->
+            <form id="admin-login-form" onsubmit="event.preventDefault();">
+                <div class="form-group">
+                    <label>Admin Email</label>
+                    <div class="input-icon-wrap">
+                        <input type="email" id="email" class="form-control" required placeholder="admin@ghorerbazar.com">
+                        <i class="far fa-envelope"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-icon-wrap">
+                        <input type="password" id="password" class="form-control" required placeholder="••••••••">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                </div>
+                <button type="submit" class="btn-login" id="login-btn">
+                    Secure Login <i class="fas fa-shield-alt"></i>
+                </button>
+            </form>
+
+            <div class="security-badge">
+                <i class="fas fa-lock"></i> Encrypted Administrator Session
+            </div>
         </div>
-
-        <form id="admin-login-form">
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" id="email" class="form-control" required placeholder="admin@ghorerbazar.com">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="password" class="form-control" required placeholder="••••••••">
-            </div>
-            <button type="submit" class="btn btn-primary btn-login" id="login-btn">
-                Secure Login <i class="fas fa-lock"></i>
-            </button>
-        </form>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script type="module" src="assets/js/firebase-config.js"></script>
-    <script type="module" src="assets/js/admin-auth.js"></script>
     <script type="module">
-        import { auth, db } from './assets/js/firebase-config.js';
-        import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { auth } from './assets/js/firebase-config.js';
+        import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        // Initialize Realtime Database Instance
+        const database = getDatabase();
 
         document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
+            e.preventDefault(); // Complete reload protection
+            
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const loginBtn = document.getElementById('login-btn');
 
@@ -90,20 +214,50 @@
             loginBtn.disabled = true;
 
             try {
+                // 1. Authenticate against Firebase Auth
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // Verify Admin
-                const adminDoc = await getDoc(doc(db, "admins", user.uid));
-                if (adminDoc.exists()) {
+                // 2. CHECK RULE 1: If it's your primary admin email, log in instantly
+                if (user.email === 'admin@ghorerbazar.com') {
                     window.location.href = 'dashboard.html';
-                } else {
-                    throw new Error("Access Denied: Not an admin account.");
+                    return;
                 }
+
+                // 3. CHECK RULE 2: Fallback to Realtime Database verification for other admins
+                const dbRef = ref(database);
+                const snapshot = await get(child(dbRef, `admins/${user.uid}`));
+
+                if (snapshot.exists()) {
+                    const adminData = snapshot.val();
+                    if (adminData.role === 'admin') {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        throw new Error("Unauthorized: Role is not set to admin.");
+                    }
+                } else {
+                    // Sign out unauthorized users immediately
+                    await signOut(auth);
+                    throw new Error("Access Denied: You do not have admin rights.");
+                }
+
             } catch (error) {
-                // If not admin, the auth listener will sign them out anyway, but let's show an error
-                Swal.fire('Login Failed', error.message.replace('Firebase:', '').trim(), 'error');
-                loginBtn.innerHTML = 'Secure Login <i class="fas fa-lock"></i>';
+                console.error(error);
+                let friendlyMsg = error.message;
+                if(error.code === 'auth/invalid-credential') {
+                    friendlyMsg = 'Incorrect email or password. Please try again.';
+                } else if(error.code === 'auth/network-request-failed') {
+                    friendlyMsg = 'Network connection failure. Check your internet.';
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Access Blocked',
+                    text: friendlyMsg,
+                    confirmButtonColor: '#2e7d32'
+                });
+
+                loginBtn.innerHTML = 'Secure Login <i class="fas fa-shield-alt"></i>';
                 loginBtn.disabled = false;
             }
         });
