@@ -196,141 +196,71 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module">
-    import { auth, db } from "./assets/js/firebase-config.js";
+        import { auth } from './assets/js/firebase-config.js';
+        import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-    import {
-        signInWithEmailAndPassword,
-        signOut
-    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        // Initialize Realtime Database Instance
+        const database = getDatabase();
 
-    import {
-        doc,
-        getDoc
-    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Complete reload protection
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('login-btn');
 
-    const form = document.getElementById("admin-login-form");
-    const loginBtn = document.getElementById("login-btn");
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+            loginBtn.disabled = true;
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
+            try {
+                // 1. Authenticate against Firebase Auth
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
 
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
+                // 2. CHECK RULE 1: If it's your primary admin email, log in instantly
+                if (user.email === 'admin@ghorerbazar.com') {
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
 
-        loginBtn.disabled = true;
-        loginBtn.innerHTML =
-            '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+                // 3. CHECK RULE 2: Fallback to Realtime Database verification for other admins
+                const dbRef = ref(database);
+                const snapshot = await get(child(dbRef, `admins/${user.uid}`));
 
-        try {
+                if (snapshot.exists()) {
+                    const adminData = snapshot.val();
+                    if (adminData.role === 'admin') {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        throw new Error("Unauthorized: Role is not set to admin.");
+                    }
+                } else {
+                    // Sign out unauthorized users immediately
+                    await signOut(auth);
+                    throw new Error("Access Denied: You do not have admin rights.");
+                }
 
-            // Firebase Authentication Login
-            const userCredential = await signInWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
-
-            const user = userCredential.user;
-
-            // Firestore Admin Check
-            const adminRef = doc(db, "admins", user.uid);
-            const adminSnap = await getDoc(adminRef);
-
-            if (!adminSnap.exists()) {
-                await signOut(auth);
-
-                Swal.fire({
-                    icon: "error",
-                    title: "Access Denied",
-                    text: "You are not an administrator.",
-                    confirmButtonColor: "#2e7d32"
-                });
-
-                loginBtn.disabled = false;
-                loginBtn.innerHTML =
-                    'Secure Login <i class="fas fa-shield-alt"></i>';
-
-                return;
-            }
-
-            const adminData = adminSnap.data();
-
-            if (adminData.role !== "admin") {
-
-                await signOut(auth);
+            } catch (error) {
+                console.error(error);
+                let friendlyMsg = error.message;
+                if(error.code === 'auth/invalid-credential') {
+                    friendlyMsg = 'Incorrect email or password. Please try again.';
+                } else if(error.code === 'auth/network-request-failed') {
+                    friendlyMsg = 'Network connection failure. Check your internet.';
+                }
 
                 Swal.fire({
-                    icon: "error",
-                    title: "Access Denied",
-                    text: "Invalid administrator permission.",
-                    confirmButtonColor: "#2e7d32"
+                    icon: 'error',
+                    title: 'Access Blocked',
+                    text: friendlyMsg,
+                    confirmButtonColor: '#2e7d32'
                 });
 
+                loginBtn.innerHTML = 'Secure Login <i class="fas fa-shield-alt"></i>';
                 loginBtn.disabled = false;
-                loginBtn.innerHTML =
-                    'Secure Login <i class="fas fa-shield-alt"></i>';
-
-                return;
             }
-
-            Swal.fire({
-                icon: "success",
-                title: "Login Successful",
-                text: "Welcome Admin!",
-                timer: 1200,
-                showConfirmButton: false
-            });
-
-            setTimeout(() => {
-                window.location.href = "dashboard.html";
-            }, 1200);
-
-        } catch (error) {
-
-            console.error(error);
-
-            let message = "Login failed.";
-
-            switch (error.code) {
-
-                case "auth/invalid-credential":
-                    message = "Incorrect email or password.";
-                    break;
-
-                case "auth/user-not-found":
-                    message = "User not found.";
-                    break;
-
-                case "auth/wrong-password":
-                    message = "Wrong password.";
-                    break;
-
-                case "auth/invalid-email":
-                    message = "Invalid email address.";
-                    break;
-
-                case "auth/network-request-failed":
-                    message = "Network error. Check your internet.";
-                    break;
-
-                case "auth/too-many-requests":
-                    message =
-                        "Too many failed attempts. Try again later.";
-                    break;
-            }
-
-            Swal.fire({
-                icon: "error",
-                title: "Login Failed",
-                text: message,
-                confirmButtonColor: "#2e7d32"
-            });
-
-            loginBtn.disabled = false;
-            loginBtn.innerHTML =
-                'Secure Login <i class="fas fa-shield-alt"></i>';
-        }
-    });
-</script>
+        });
+    </script>
 </body>
 </html>
