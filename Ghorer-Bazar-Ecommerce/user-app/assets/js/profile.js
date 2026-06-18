@@ -1,6 +1,7 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+// এখানে updateDoc এর বদলে setDoc ব্যবহার করা হয়েছে
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // Layout Containers
 const loadingIndicator = document.getElementById('profile-loading');
@@ -30,14 +31,12 @@ onAuthStateChanged(auth, async (user) => {
 
     if (user) {
         currentUserUid = user.uid;
-        // Show actual profile layout and hide fallback
         loggedInContainer.style.display = 'grid';
         loggedOutContainer.style.display = 'none';
         
         await loadUserData(user.uid);
     } else {
         currentUserUid = null;
-        // Show clean Login/Register placeholder card, hide dashboard
         loggedInContainer.style.display = 'none';
         loggedOutContainer.style.display = 'block';
     }
@@ -48,42 +47,47 @@ async function loadUserData(uid) {
         const docRef = doc(db, "users", uid);
         const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            
-            // Populate Sidebar
-            sidebarName.innerText = data.name || auth.currentUser.displayName || 'User';
-            sidebarEmail.innerText = data.email || auth.currentUser.email;
-            if(data.photoURL) sidebarPhoto.src = data.photoURL;
+        let userData = {};
 
-            // Populate Profile Fields
-            formName.value = data.name || auth.currentUser.displayName || '';
-            formEmail.value = data.email || auth.currentUser.email || '';
-            formPhone.value = data.phone || '';
-            formDistrict.value = data.district || '';
-            formUpazila.value = data.upazila || '';
-            formAddress.value = data.address || '';
-        } else {
-            // Fallback if document doesn't exist yet but user is logged in
-            applyFallbackData();
+        if (docSnap.exists()) {
+            userData = docSnap.data();
         }
+
+        // Display Name & Email fallback
+        const displayName = userData.name || auth.currentUser.displayName || 'User';
+        const displayEmail = userData.email || auth.currentUser.email || 'user@example.com';
+        
+        // Auto Avatar Generation (Using UI-Avatars API) based on user name
+        const autoAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2e7d32&color=fff&size=150&bold=true`;
+
+        // Populate Sidebar
+        sidebarName.innerText = displayName;
+        sidebarEmail.innerText = displayEmail;
+        sidebarPhoto.src = userData.photoURL || autoAvatar;
+
+        // Populate Profile Fields
+        formName.value = displayName;
+        formEmail.value = displayEmail;
+        formPhone.value = userData.phone || '';
+        formDistrict.value = userData.district || '';
+        formUpazila.value = userData.upazila || '';
+        formAddress.value = userData.address || '';
+
     } catch (error) {
         console.error("Error loading user profile:", error);
-        
-        // If Firestore rules deny access, show a clear message
         if(error.code === 'permission-denied') {
             Swal.fire('Database Locked', 'Please update your Firestore Security Rules to allow access.', 'error');
         }
-        
-        // Apply fallback data so the page isn't stuck on "Loading..."
         applyFallbackData();
     }
 }
 
 function applyFallbackData() {
-    sidebarName.innerText = auth.currentUser.displayName || 'Ghorer Bazar User';
+    const name = auth.currentUser.displayName || 'User';
+    sidebarName.innerText = name;
     sidebarEmail.innerText = auth.currentUser.email || 'user@example.com';
-    formName.value = auth.currentUser.displayName || '';
+    sidebarPhoto.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2e7d32&color=fff&bold=true`;
+    formName.value = name;
     formEmail.value = auth.currentUser.email || '';
 }
 
@@ -97,16 +101,24 @@ if (profileForm) {
 
         try {
             const userRef = doc(db, "users", currentUserUid);
-            await updateDoc(userRef, {
-                name: formName.value.trim(),
+            const updatedName = formName.value.trim();
+            
+            // Generate auto avatar if name changed
+            const autoAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(updatedName)}&background=2e7d32&color=fff&bold=true`;
+
+            // We use setDoc with { merge: true } so it forces save even if doc is missing
+            await setDoc(userRef, {
+                name: updatedName,
                 phone: formPhone.value.trim(),
                 district: formDistrict.value.trim(),
                 upazila: formUpazila.value.trim(),
-                address: formAddress.value.trim()
-            });
+                address: formAddress.value.trim(),
+                photoURL: autoAvatar
+            }, { merge: true });
 
             // Sync with active UI
-            sidebarName.innerText = formName.value.trim();
+            sidebarName.innerText = updatedName;
+            sidebarPhoto.src = autoAvatar;
 
             Swal.fire({
                 icon: 'success',
@@ -117,11 +129,7 @@ if (profileForm) {
             });
         } catch (error) {
             console.error("Error updating profile:", error);
-            if(error.code === 'permission-denied') {
-                Swal.fire('Update Failed', 'Permission denied. Check Firestore Rules.', 'error');
-            } else {
-                Swal.fire('Update Failed', error.message, 'error');
-            }
+            Swal.fire('Update Failed', error.message, 'error');
         } finally {
             btn.innerHTML = 'Save Changes';
             btn.disabled = false;
