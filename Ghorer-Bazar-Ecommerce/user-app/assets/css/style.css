@@ -547,3 +547,44 @@ ul {
     .small-product-grid .product-img-wrapper { height: 180px; }
     .small-product-grid .product-title { font-size: 0.95rem; }
 }
+
+
+
+/* ==========================================================================
+   Home Page Layout Fixes & Red Price Strikethrough
+   ========================================================================== */
+
+/* 1. Make Old Price Red Strikethrough */
+.old-price {
+    font-size: 1.1rem !important;
+    color: #888 !important;
+    text-decoration: line-through !important;
+    text-decoration-color: #e74c3c !important; /* Solid Red Line */
+    text-decoration-thickness: 2px !important; /* Make the cut clearly visible */
+}
+
+/* 2. Reduce Category Size to push Trending Products up */
+.categories-section {
+    padding: 10px 0 5px 0 !important;
+}
+.horizontal-category-list {
+    gap: 15px !important;
+    padding: 5px 0 10px 0 !important;
+}
+.cat-item-small {
+    flex: 0 0 75px !important; /* Smaller width */
+}
+.cat-item-small .cat-img-box {
+    width: 65px !important; 
+    height: 65px !important; 
+    margin-bottom: 6px !important;
+}
+.cat-item-small span {
+    font-size: 0.7rem !important;
+    letter-spacing: 0px !important;
+}
+
+/* 3. Reduce gap above Trending Apparels */
+.featured-section {
+    padding-top: 10px !important;
+}
