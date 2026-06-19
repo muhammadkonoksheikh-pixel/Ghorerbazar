@@ -34,15 +34,29 @@ async function loadCategories() {
     } catch (e) { console.error("Categories error:", e); container.innerHTML = ''; }
 }
 
-// 2. Banner Fix - Observer True added for dynamic injection
+// 2. Banner Fix - Local Filter & Sort (NO INDEX REQUIRED!)
 async function loadBanners() {
     const container = document.getElementById('hero-slider-container');
     if (!container) return;
     try {
-        const snapshot = await getDocs(query(collection(db, "banners"), where("isActive", "==", true), orderBy("order", "asc")));
+        // Simple query without compound clauses to avoid index errors completely
+        const snapshot = await getDocs(collection(db, "banners"));
         
+        let bannersList = [];
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            // Filter locally in Javascript
+            if (data.isActive !== false) { 
+                bannersList.push({ id: docSnap.id, ...data });
+            }
+        });
+
+        // Sort locally in Javascript by order key
+        bannersList.sort((a, b) => (a.order || 0) - (b.order || 0));
+
         let html = '';
-        if (snapshot.empty) {
+        if (bannersList.length === 0) {
+            // High quality fallback fashion banner
             html = `
                 <div class="swiper-slide hero-slide" style="background-image: url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1200&auto=format&fit=crop'); background-color: #222;">
                     <div class="hero-content">
@@ -52,8 +66,7 @@ async function loadBanners() {
                     </div>
                 </div>`;
         } else {
-            snapshot.forEach(doc => {
-                const data = doc.data();
+            bannersList.forEach(data => {
                 html += `
                     <div class="swiper-slide hero-slide" style="background-image: url('${data.imageUrl}'); background-color: #222;">
                         <div class="hero-content">
@@ -67,20 +80,20 @@ async function loadBanners() {
         
         container.innerHTML = html;
 
-        // INIT SWIPER WITH OBSERVER
+        // Initialize Swiper with observers
         new Swiper(".heroSwiper", { 
             spaceBetween: 0, 
             effect: "fade", 
             loop: true, 
-            observer: true,             // Makes swiper detect new dynamic elements
-            observeParents: true,       // Makes swiper detect new dynamic elements
+            observer: true,             
+            observeParents: true,       
             autoplay: { delay: 4000, disableOnInteraction: false }, 
             pagination: { el: ".swiper-pagination", clickable: true }, 
             navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" } 
         });
 
     } catch (e) {
-        console.error("Banner error:", e);
+        console.error("Banner loading process failed:", e);
     }
 }
 
@@ -90,7 +103,6 @@ function generateProductCard(id, data, isSmall = false) {
     const badgeHTML = discount > 0 ? `<div class="product-badge">-${discount}%</div>` : '';
     let imgUrl = 'assets/images/placeholder.jpg';
     
-    // Check variant images first, then fallback to standard images
     if (data.variants && data.variants.length > 0 && data.variants[0].imageUrl) {
         imgUrl = data.variants[0].imageUrl;
     } else if (data.images && data.images.length > 0) {
