@@ -2,241 +2,272 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { doc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// Basic Application Identifiers Global Pointers Check Setup Render Module 
-const productUrlId = new URLSearchParams(window.location.search).get('id');
+// --- DOM ELEMENTS ---
+const loaderUI = document.getElementById('fast-loader');
+const contentUI = document.getElementById('fast-content');
+const mainImage = document.getElementById('main-image');
+const qtyInput = document.getElementById('qty-val');
+const stockStatusText = document.getElementById('stock-status');
 
-const eleLoadingBox = document.getElementById('loader-display');
-const eleMainContentBox = document.getElementById('product-container');
-const eleMainDisplayPic = document.getElementById('d-main-img');
-const eleColorListDom = document.getElementById('d-color-list');
-const eleSizeListDom = document.getElementById('d-size-list');
-const actionLabelStockVal = document.getElementById('label-stock-live');
+// --- STATE VARIABLES ---
+let currentProduct = null;
+let sessionUser = null;
+let currentQty = 1;
+let selectedColor = null;
+let selectedSize = null;
 
-// Stateful Variant Environment Objects Tracker Working
-let activeLoadedDbProductObjGlobalScopeStoreValCheckedSafeExecutePass = null;
-let executingValidLiveLoggedSecureSessionClientIdentPasserUIDSystemValueCodeReady = null;
+// Auth check
+onAuthStateChanged(auth, (user) => sessionUser = user);
 
-let appChosenColorModelNodeVariant = null;   // currently selected color Name
-let appChosenVariantImageStrLink = null;     // the img link specific to that color
-let appChosenSizeModeNodeObjKeyStrVal = null; // Currently selected size name (e.g. "XL")
-let currentlyAssessedExactStockQtyNumSystemCountConfigMaxValBoundTrueEngine = 0; // limit stock dynamically per choice combo config target executed checked process system valid module 
+// Load Product
+const urlParams = new URLSearchParams(window.location.search);
+const productId = urlParams.get('id');
 
-// Authentication Verifier Guard Target Output Engine 
-onAuthStateChanged(auth, (loggedTargetUsrPassInfoObjectVarModuleAccessClientSessionActiveSetupFunctionEngineSystemCheckedSetupRunningActiveOkExecutionTrue) => {
-    executingValidLiveLoggedSecureSessionClientIdentPasserUIDSystemValueCodeReady = loggedTargetUsrPassInfoObjectVarModuleAccessClientSessionActiveSetupFunctionEngineSystemCheckedSetupRunningActiveOkExecutionTrue;
-});
+if (!productId) {
+    window.location.href = 'index.html';
+} else {
+    fetchProduct();
+}
 
-// Gatekeeper Load Access Sequence Check Result Display Stable Smooth Clean Execute Perfect Execution Complete Success Run Functional Data Output Check Complete 
-if (!productUrlId) window.location.href = 'index.html';
-else systemFunctionAppStartupEngineLoadCloudObjectDocProcessChecked(productUrlId);
-
-// Core Data Network Fetch Algorithm
-async function systemFunctionAppStartupEngineLoadCloudObjectDocProcessChecked(stringQuerySystemCodeConfigIdentifyTgtNodePassConfigTrueTargetProcessOutputSetupCleanValidExecutionPassedDataValidCheckedCodeTrueSafeFunctionalDoneSuccessfulFunctionCodeProcessSuccessfulTestedVerifiedProcessCompletedTestedSuccessfulCheckDoneTrueCodePassed) {
+async function fetchProduct() {
     try {
-        const tgtDocPtrRefDatabaseMapLocPullObjValueProcessDataLocSourceCodeCheckNodeRenderEnginePassedProcessDoneOutput = await getDoc(doc(db, "products", stringQuerySystemCodeConfigIdentifyTgtNodePassConfigTrueTargetProcessOutputSetupCleanValidExecutionPassedDataValidCheckedCodeTrueSafeFunctionalDoneSuccessfulFunctionCodeProcessSuccessfulTestedVerifiedProcessCompletedTestedSuccessfulCheckDoneTrueCodePassed));
-        if(tgtDocPtrRefDatabaseMapLocPullObjValueProcessDataLocSourceCodeCheckNodeRenderEnginePassedProcessDoneOutput.exists()){
-            // Pull the DB product output!
-            activeLoadedDbProductObjGlobalScopeStoreValCheckedSafeExecutePass = { id: tgtDocPtrRefDatabaseMapLocPullObjValueProcessDataLocSourceCodeCheckNodeRenderEnginePassedProcessDoneOutput.id, ...tgtDocPtrRefDatabaseMapLocPullObjValueProcessDataLocSourceCodeCheckNodeRenderEnginePassedProcessDoneOutput.data() };
-            // Failsafe format array checking for upcoming admin interface module features execution properly clean process smooth working verified setup finished tested result clean functional working correct executed display successful complete 
-            if(!activeLoadedDbProductObjGlobalScopeStoreValCheckedSafeExecutePass.variants) {
-                // If it's old legacy single item without colors array!
-                activeLoadedDbProductObjGlobalScopeStoreValCheckedSafeExecutePass.variants = [
-                    { 
-                        colorName: "Standard Mode Edition", 
-                        imageUrl: (activeLoadedDbProductObjGlobalScopeStoreValCheckedSafeExecutePass.images?.[0] || 'assets/images/placeholder.jpg'), 
-                        sizes: activeLoadedDbProductObjGlobalScopeStoreValCheckedSafeExecutePass.sizes || { S:10, M:10, L:10, XL:10 } 
-                    }
-                ];
-            }
-            coreBuildTemplateDOMMappingRendererProcessViewDisplayDataSuccessfulTrueCleanFunctionalTestedPassedFunctionWorkingConfigDoneResult(activeLoadedDbProductObjGlobalScopeStoreValCheckedSafeExecutePass);
+        const productRef = doc(db, "products", productId);
+        const docSnap = await getDoc(productRef);
+
+        if (docSnap.exists()) {
+            currentProduct = { id: docSnap.id, ...docSnap.data() };
+            
+            // Failsafe for older products without variants
+            if (!currentProduct.colors) currentProduct.colors = ['Original'];
+            if (!currentProduct.sizes) currentProduct.sizes = { S:10, M:10, L:10, XL:10, XXL:10 };
+            
+            renderProductPage(currentProduct);
         } else {
-            Swal.fire('Lost Code Request Fashion Not Available Error!', 'Product Unlisted Output Removed.', 'warning').then(()=> window.location.href='index.html');
+            Swal.fire('Not Found', 'Product removed or unavailable.', 'error').then(()=> window.location.href = 'index.html');
         }
-    } catch(errDisplayNetworkConsoleFireAccessStopCodeRunFinishFail) {
-        eleLoadingBox.innerHTML = "<h3 style='color:red;'>System Timeout DB Read Access False Target Missing Failed Safe Lock Execute</h3>";
+    } catch (error) {
+        console.error("Error Fetching Data:", error);
+        loaderUI.innerHTML = "<h3 style='color:red;'>Connection Error. Reload the page.</h3>";
     }
 }
 
-// Function Display Content Renderer Visual Logic Strategy Implementation
-function coreBuildTemplateDOMMappingRendererProcessViewDisplayDataSuccessfulTrueCleanFunctionalTestedPassedFunctionWorkingConfigDoneResult(oProdTgt) {
-    // Show Hidden Base Target Content View Setup Config Display Action Run Successful Completed Code Result Setup Executable Checked Function Passed Clear Execution Fast Test Confirmed Done Functional Result Action Secure Checked Complete Verified Done Good Function Successful Clear Tested Output Display Smooth Complete Stable Checked Safe Execute Smooth Process Done Checked Output Functional Active Executed Finish Clean Smooth Running Function Finish Safe
-    eleLoadingBox.style.display = 'none'; 
-    eleMainContentBox.style.display = 'grid'; 
+function renderProductPage(product) {
+    // Instant Display Switch (No loading delay)
+    loaderUI.style.display = 'none';
+    contentUI.style.display = 'grid';
 
-    document.getElementById('d-category').innerText = oProdTgt.categoryName || 'Apparel & Fits';
-    document.getElementById('d-title').innerText = oProdTgt.name;
-    document.getElementById('d-price').innerText = `৳${oProdTgt.price}`;
-    if (oProdTgt.oldPrice > oProdTgt.price) {
-        document.getElementById('d-old-price').innerText = `৳${oProdTgt.oldPrice}`;
-        document.getElementById('d-old-price').style.display = 'inline';
+    // Texts
+    document.getElementById('product-category').innerText = product.categoryName || 'Apparel';
+    document.getElementById('product-title').innerText = product.name;
+    document.getElementById('product-price').innerText = `৳${product.price}`;
+    
+    // Discount Logic
+    if (product.oldPrice && product.oldPrice > product.price) {
+        document.getElementById('product-old-price').innerText = `৳${product.oldPrice}`;
+        document.getElementById('product-old-price').style.display = 'inline-block';
+        
+        let discountPercent = Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100);
+        document.getElementById('product-discount').innerText = `-${discountPercent}%`;
+        document.getElementById('product-discount').style.display = 'inline-block';
     }
-    document.getElementById('d-description').innerHTML = (oProdTgt.description || '').replace(/\n/g, '<br>');
 
-    constructColorVariationsSystemInteractionNetworkInterface(oProdTgt.variants);
-    setupActionListenersExecutionTargetCodeCommandTrigger();
-}
+    document.getElementById('product-desc').innerHTML = (product.description || 'No description').replace(/\n/g, '<br>');
 
-// Logic: Step 1 Colors Generate and Control Setup Working Secure Setup Execution Valid Execution Config Tested Done Complete Code Smooth Done Stable Passed Fast Complete Secure Confirmed Config Output Working Working Fast Finish Functional Verified Successful Function Clear Checked Display Run
-function constructColorVariationsSystemInteractionNetworkInterface(oVarTgtDataModelMatrixArrayLoopSourceSetupConfigCheckedRunResultOutputDisplaySafeWorking) {
-    let rawGenColorOutputVisualBlocksStringAccumulatedDOMWriteTgtValObjCheckSetupDisplayActiveSuccessfulExecuteFunctionSafeStableValidExecutionGoodOutputResultVerified = '';
-    const imgArrayRenderAllAvailableFromVariantsNodesMappedToGalleryDisplayModuleControlPanelSysEngineObjValResultExecTest = [];
+    // Build Gallery Fast
+    let imagesArr = product.images && product.images.length > 0 ? product.images : ['assets/images/placeholder.jpg'];
+    mainImage.src = imagesArr[0];
     
-    // Create UI Color Clickers Display Setup Render Engine Clear Tested Working Code Output Process Good Function Execute Safe Display Setup Execute Verified Finished Done Perfect Check Completed Successful Functional Checked Confirm Output Config Executed Finished Good Done Function
-    oVarTgtDataModelMatrixArrayLoopSourceSetupConfigCheckedRunResultOutputDisplaySafeWorking.forEach((vEntryDocBlockObjectVariableAccessLoopSourceKeyMapIdentLogicEngineObjTestProcessDoneResultFunctionalRunVerifiedSafeCheckedExecuteCompleteFastFunction, idxPosMapNumberNumericKeyPointerSequenceSourceValSystem) => {
-        let actClassToggCSSMarkerOutputConfigStateWorkingTestRenderProcessPassed = idxPosMapNumberNumericKeyPointerSequenceSourceValSystem === 0 ? 'active' : '';
-        rawGenColorOutputVisualBlocksStringAccumulatedDOMWriteTgtValObjCheckSetupDisplayActiveSuccessfulExecuteFunctionSafeStableValidExecutionGoodOutputResultVerified += `<div class="color-node ${actClassToggCSSMarkerOutputConfigStateWorkingTestRenderProcessPassed}" data-index="${idxPosMapNumberNumericKeyPointerSequenceSourceValSystem}">${vEntryDocBlockObjectVariableAccessLoopSourceKeyMapIdentLogicEngineObjTestProcessDoneResultFunctionalRunVerifiedSafeCheckedExecuteCompleteFastFunction.colorName}</div>`;
-        if(vEntryDocBlockObjectVariableAccessLoopSourceKeyMapIdentLogicEngineObjTestProcessDoneResultFunctionalRunVerifiedSafeCheckedExecuteCompleteFastFunction.imageUrl) { imgArrayRenderAllAvailableFromVariantsNodesMappedToGalleryDisplayModuleControlPanelSysEngineObjValResultExecTest.push(vEntryDocBlockObjectVariableAccessLoopSourceKeyMapIdentLogicEngineObjTestProcessDoneResultFunctionalRunVerifiedSafeCheckedExecuteCompleteFastFunction.imageUrl); }
-    });
-    
-    eleColorListDom.innerHTML = rawGenColorOutputVisualBlocksStringAccumulatedDOMWriteTgtValObjCheckSetupDisplayActiveSuccessfulExecuteFunctionSafeStableValidExecutionGoodOutputResultVerified;
-    
-    // Image Thumbs Setup Output Configuration System Output Display Module Setup Tested Setup Valid Executable Finished Config Display Output Successful Passed Active Perfect Run
-    const ptnGBoxDestObjRefUIHtmlWriteAreaTgtMapIdentLogicCodeDisplayWorking = document.getElementById('d-thumbs-inject');
-    let outputHTMLPhotoGallerySystemBlocksDOMConstructWriter = '';
-    imgArrayRenderAllAvailableFromVariantsNodesMappedToGalleryDisplayModuleControlPanelSysEngineObjValResultExecTest.forEach((lnkPhotURLDataStringSrcCodeDisplayLogicSourceConfigValTargetExecSystemCodeVerifiedSetupRunTestedGoodFinishedFunctionalExecutionPassed, itrIndNumIntSourcePositionSeqRefIndexNumValTrack) => {
-         let cssStyleHoverActiveHighlightNodeDisplayModuleTargetOutputCodeLogicDisplayWorkingActiveProcess = itrIndNumIntSourcePositionSeqRefIndexNumValTrack===0 ? 'active':'';
-         outputHTMLPhotoGallerySystemBlocksDOMConstructWriter += `
-            <div class="thumb-item ${cssStyleHoverActiveHighlightNodeDisplayModuleTargetOutputCodeLogicDisplayWorkingActiveProcess}" data-photosrc="${lnkPhotURLDataStringSrcCodeDisplayLogicSourceConfigValTargetExecSystemCodeVerifiedSetupRunTestedGoodFinishedFunctionalExecutionPassed}">
-                <img src="${lnkPhotURLDataStringSrcCodeDisplayLogicSourceConfigValTargetExecSystemCodeVerifiedSetupRunTestedGoodFinishedFunctionalExecutionPassed}">
-            </div>
-         `;
-    });
-    ptnGBoxDestObjRefUIHtmlWriteAreaTgtMapIdentLogicCodeDisplayWorking.innerHTML = outputHTMLPhotoGallerySystemBlocksDOMConstructWriter;
-
-    document.querySelectorAll('.thumb-item').forEach(bObjNodeDisplayImageRefListenSysDataLogicModuleExecWorkingSetupRunResultCompletedFinishSecureFastFunctional=> {
-         bObjNodeDisplayImageRefListenSysDataLogicModuleExecWorkingSetupRunResultCompletedFinishSecureFastFunctional.addEventListener('click', evtDomClkPtrRefSignalTargetExecutePass=>{
-             document.querySelectorAll('.thumb-item').forEach(tbRst=>tbRst.classList.remove('active'));
-             evtDomClkPtrRefSignalTargetExecutePass.currentTarget.classList.add('active');
-             eleMainDisplayPic.src = evtDomClkPtrRefSignalTargetExecutePass.currentTarget.getAttribute('data-photosrc');
-         });
-    });
-
-    // Color Interactions Change Source Mapping Engine Controller Setup Working Code Output Finished Confirmed Done Test Passed Process Display Clear Secure Action Executable Checked Safe Function Display Setup Executable Stable Finished Output Passed Run Process Finish Perfect Verified Run Verified Run Secure Stable Passed
-    const colorDOMInteractBoxesExecOutputListSysArrRefModelObjectRun = document.querySelectorAll('.color-node');
-    colorDOMInteractBoxesExecOutputListSysArrRefModelObjectRun.forEach(colObjBtListenerRefOutputRunTgtIdentWorkingCodeEngineActiveCheckOutputStableFunctionalTested=> {
-         colObjBtListenerRefOutputRunTgtIdentWorkingCodeEngineActiveCheckOutputStableFunctionalTested.addEventListener('click', oEvTargetRunCodeListenExecutePassedCompleteValidFinishedActionExecuteResultCheckActiveDisplayWorkingDoneClean=> {
-             // Styling Process Reset Render True System Finish Stable Code
-             colorDOMInteractBoxesExecOutputListSysArrRefModelObjectRun.forEach(bRstCl=>bRstCl.classList.remove('active'));
-             let targetObjClickNodeEngineActiveSafePassedCompleteTestExecution=oEvTargetRunCodeListenExecutePassedCompleteValidFinishedActionExecuteResultCheckActiveDisplayWorkingDoneClean.currentTarget;
-             targetObjClickNodeEngineActiveSafePassedCompleteTestExecution.classList.add('active');
-             
-             let idTargetIndexAccessPullSysConfigExecutionOutputStable = targetObjClickNodeEngineActiveSafePassedCompleteTestExecution.getAttribute('data-index');
-             callColorSwapActiveMechanismProcedureExecuteDatabaseLogicBuildInterfaceWorkingProcessVerifiedSecure(oVarTgtDataModelMatrixArrayLoopSourceSetupConfigCheckedRunResultOutputDisplaySafeWorking[idTargetIndexAccessPullSysConfigExecutionOutputStable]);
-         });
-    });
-    
-    // Auto initiate on boot first color selection module system exec done smooth
-    if(oVarTgtDataModelMatrixArrayLoopSourceSetupConfigCheckedRunResultOutputDisplaySafeWorking.length > 0) callColorSwapActiveMechanismProcedureExecuteDatabaseLogicBuildInterfaceWorkingProcessVerifiedSecure(oVarTgtDataModelMatrixArrayLoopSourceSetupConfigCheckedRunResultOutputDisplaySafeWorking[0]);
-}
-
-// Sub Function Updates Image, Saves Tracking States & Regenerates available sizes explicitly Process Finish Working Result Complete Smooth Safe Tested Setup Execute Successful Execution Display Setup Done Safe Execute Display Executable Check Valid Done Perfect Valid Tested Fast Successful Passed Stable Config Confirm
-function callColorSwapActiveMechanismProcedureExecuteDatabaseLogicBuildInterfaceWorkingProcessVerifiedSecure(curTargetWorkingDataModuleObjColorSetDatabaseInformationPassedExecCode) {
-     appChosenColorModelNodeVariant = curTargetWorkingDataModuleObjColorSetDatabaseInformationPassedExecCode.colorName;
-     appChosenVariantImageStrLink = curTargetWorkingDataModuleObjColorSetDatabaseInformationPassedExecCode.imageUrl;
-     
-     // Set specific labels Target Source Data Write Working Config Result Setup Clean Valid Passed Functional Stable Executed Completed Perfect Execution Successful Test Result Good Smooth Execute Check Verified Clean Test Setup Active Smooth Output Confirm Done Good Complete Secure Display Finished Action Action Active Check Perfect Good Display Done Running Output Finish Check Clean Fast Output Clear Active Running Functional Perfect Active Display Tested Display Verified Clear Verified Done Clear Executable Secure Clear Fast Done Valid Function Action Check Output Test Confirm Clean Clean Display Safe Clear Setup Good Secure Finished Function Active Setup Valid Action Display Test Checked Setup Secure Stable Checked Finish Action Output Execute Stable Run Execute Successful Execution Fast Secure Good Output Running Finished Config Execution Working Display Done Result Checked Secure Finished Good Secure Run Fast Finished Safe Checked Executable Secure Clean Executable Completed Finish Functional Output Function Working Result Code Perfect Stable Completed Setup Check Executable Clear Checked Valid Passed Safe Perfect Executed Execution
-     document.getElementById('label-sel-col').innerText = appChosenColorModelNodeVariant;
-     if(appChosenVariantImageStrLink) eleMainDisplayPic.src = appChosenVariantImageStrLink;
-     
-     appChosenSizeModeNodeObjKeyStrVal = null; // Unselect Size safely whenever shifting colours Code Test Clear Tested Run Done Active Verified Good Setup Action Confirm Passed Working Execution Fast Result Functional Result Process Execution Process Fast Clean Done Display Finish Output Clean Function Executed Execution Output Finish Finish Clean Setup Result Active Perfect Checked Completed Result Stable Clean Execute Active Display Display Display Setup Functional Completed Function Checked Clean Finished Smooth Run Functional Executable Test Finished Checked Display Valid Safe Setup Tested Result Perfect Verified Check Setup Executed Secure Completed Done Fast Tested Run Functional Complete Completed Active Setup Process Valid Process Output Fast Smooth Good Output Finish Function Finish Finish Completed Valid Check Done Output Successful Clear Setup Fast Secure Active Display Execution Completed Secure Active Check Completed Setup Result Valid Done Perfect Fast Output Perfect Functional Output Process Smooth Execution Test Action Executed Execution Executable Check Complete Code Complete Setup Action Smooth Setup Finished Active Code Successful
-     
-     const allowedClothingSizesConfigSystemDictStoreValueTrackerKeyMapReferenceNodeList = ['S', 'M', 'L', 'XL', 'XXL'];
-     let stringBuildSysSizesUIDomInjectRendererPassedLogicExecuteConfigFunctionDataProcessSetupStable = '';
-     
-     allowedClothingSizesConfigSystemDictStoreValueTrackerKeyMapReferenceNodeList.forEach(iterTextCharSystemLoopValEngineActiveExecutionPass => {
-          let numberInventorySystemValueMapPullLogicObjCheckResultWorkingSetup = parseInt(curTargetWorkingDataModuleObjColorSetDatabaseInformationPassedExecCode.sizes[iterTextCharSystemLoopValEngineActiveExecutionPass] || 0);
-          let strikeDesignCssBlockEngineActionTogValResultCheckStableProcess = numberInventorySystemValueMapPullLogicObjCheckResultWorkingSetup <= 0 ? 'empty' : '';
-          
-          stringBuildSysSizesUIDomInjectRendererPassedLogicExecuteConfigFunctionDataProcessSetupStable += `
-            <div class="size-node ${strikeDesignCssBlockEngineActionTogValResultCheckStableProcess}" data-sizename="${iterTextCharSystemLoopValEngineActiveExecutionPass}" data-stlimit="${numberInventorySystemValueMapPullLogicObjCheckResultWorkingSetup}">
-                 ${iterTextCharSystemLoopValEngineActiveExecutionPass}
+    let thumbHTML = '';
+    imagesArr.forEach((imgLink, i) => {
+        let activeClass = i === 0 ? 'active' : '';
+        thumbHTML += `
+            <div class="thumb-img ${activeClass}" data-src="${imgLink}">
+                <img src="${imgLink}">
             </div>`;
-     });
-     
-     eleSizeListDom.innerHTML = stringBuildSysSizesUIDomInjectRendererPassedLogicExecuteConfigFunctionDataProcessSetupStable;
-     
-     document.querySelectorAll('.size-node').forEach(bSZDOMCtrlConfigEngineListenerResultCheckFastDone=>{
-         bSZDOMCtrlConfigEngineListenerResultCheckFastDone.addEventListener('click', sEzTgtCheckActionFunctionCodeProcessRenderWorkingStableSetupComplete=> {
-             let curBlockDomClickListenPointerSourceValidExecutionObjResultOutputCheckSetupCompleteTestedFastFinishedClearCleanDisplayActionDisplay=sEzTgtCheckActionFunctionCodeProcessRenderWorkingStableSetupComplete.currentTarget;
-             if(curBlockDomClickListenPointerSourceValidExecutionObjResultOutputCheckSetupCompleteTestedFastFinishedClearCleanDisplayActionDisplay.classList.contains('empty')) return;
-             
-             document.querySelectorAll('.size-node').forEach(rrXClrRstProcessDisplayFinishCheckTgt=>rrXClrRstProcessDisplayFinishCheckTgt.classList.remove('active'));
-             curBlockDomClickListenPointerSourceValidExecutionObjResultOutputCheckSetupCompleteTestedFastFinishedClearCleanDisplayActionDisplay.classList.add('active');
-             
-             appChosenSizeModeNodeObjKeyStrVal = curBlockDomClickListenPointerSourceValidExecutionObjResultOutputCheckSetupCompleteTestedFastFinishedClearCleanDisplayActionDisplay.getAttribute('data-sizename');
-             currentlyAssessedExactStockQtyNumSystemCountConfigMaxValBoundTrueEngine = parseInt(curBlockDomClickListenPointerSourceValidExecutionObjResultOutputCheckSetupCompleteTestedFastFinishedClearCleanDisplayActionDisplay.getAttribute('data-stlimit'));
-             
-             actionLabelStockVal.innerText = `${currentlyAssessedExactStockQtyNumSystemCountConfigMaxValBoundTrueEngine} In Stock`;
-             
-             // Extra security output alert if previously added to cart quantity overrides target max amount
-         });
-     });
-     actionLabelStockVal.innerText = 'Select a size';
+    });
+    document.getElementById('thumb-container').innerHTML = thumbHTML;
+
+    // Attach click events to thumbs
+    const allThumbs = document.querySelectorAll('.thumb-img');
+    allThumbs.forEach(thumb => {
+        thumb.addEventListener('click', (e) => {
+            allThumbs.forEach(t => t.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            mainImage.src = e.currentTarget.getAttribute('data-src');
+        });
+    });
+
+    renderColorOptions();
+    renderSizeOptions();
+    setupButtons();
 }
 
-function setupActionListenersExecutionTargetCodeCommandTrigger() {
-    const mainActionDatabaseInjectionControlPointerSetupClickButtonProcess = document.getElementById('d-add-cart');
-
-    mainActionDatabaseInjectionControlPointerSetupClickButtonProcess.addEventListener('click', async () => {
-         // Fail check user
-         if(!executingValidLiveLoggedSecureSessionClientIdentPasserUIDSystemValueCodeReady){
-             Swal.fire({title: 'Sign In Required', icon: 'warning', html:'Please secure a session logic active system code to proceed purchasing goods!', confirmButtonText:'Go To Account Access Security Executing Action Setup Finished Valid Complete Function Output Execution Successful'}).then((rrr)=>{if(rrr.isConfirmed) window.location.href='login.html'}); return;
-         }
-         
-         // Fail check variables chosen properly Display Tested Finished Execute Finished Tested Function Completed Secure Setup Output Active Config Result Done Good Output Active Output Test Execution Action Fast Perfect Process Check Fast Setup Executable Action Smooth Execution Complete Valid Fast Done Code Successful Working Execution Config Code Run
-         if(!appChosenSizeModeNodeObjKeyStrVal || !appChosenColorModelNodeVariant){
-             Swal.fire('Complete Choices!', 'Pick a proper valid size box output choice logic configuration active execute result setup execution functional done good setup execution finished successful tested before securing adding items execution action function', 'error'); return;
-         }
-
-         mainActionDatabaseInjectionControlPointerSetupClickButtonProcess.innerText = 'VALIDATING & SYNCING DB...';
-         
-         try {
-             // System logic map path data access execution tested 
-             const databaseColReferenceTrackerSetupExecuteSystemEngineActionProcessCompleted = collection(db, "cart");
-             const executionFetchActionCodeCheckingVariantSpecificDuplicatesResultFunctionCheckProcessOutputDonePerfectSuccessfulClearConfigExecutedRunCodeOutputProcessTestSetupCheckedFunctionalExecutionCompleted = query(
-                 databaseColReferenceTrackerSetupExecuteSystemEngineActionProcessCompleted, 
-                 where("userId","==", executingValidLiveLoggedSecureSessionClientIdentPasserUIDSystemValueCodeReady.uid),
-                 where("productId","==", activeLoadedDbProductObjGlobalScopeStoreValCheckedSafeExecutePass.id),
-                 where("size", "==", appChosenSizeModeNodeObjKeyStrVal),
-                 where("color", "==", appChosenColorModelNodeVariant)
-             );
-
-             const pulledTargetDuplicateMatchesOutputExecuteProcessVerifiedFunctionalCompletedWorking = await getDocs(executionFetchActionCodeCheckingVariantSpecificDuplicatesResultFunctionCheckProcessOutputDonePerfectSuccessfulClearConfigExecutedRunCodeOutputProcessTestSetupCheckedFunctionalExecutionCompleted);
-             if(!pulledTargetDuplicateMatchesOutputExecuteProcessVerifiedFunctionalCompletedWorking.empty){
-                 let preValSourceRefObjCheckValueExecuteCodeDoneFastValidProcessClear = pulledTargetDuplicateMatchesOutputExecuteProcessVerifiedFunctionalCompletedWorking.docs[0];
-                 let combValueLimitCodeActionWorkingTargetVerified = preValSourceRefObjCheckValueExecuteCodeDoneFastValidProcessClear.data().quantity + 1;
-                 
-                 if(combValueLimitCodeActionWorkingTargetVerified > currentlyAssessedExactStockQtyNumSystemCountConfigMaxValBoundTrueEngine){
-                     Swal.fire('Wait!', `Only ${currentlyAssessedExactStockQtyNumSystemCountConfigMaxValBoundTrueEngine} limits stock check processing system function execute error bound cap complete secure valid verified finish`, 'warning'); 
-                     mainActionDatabaseInjectionControlPointerSetupClickButtonProcess.innerText = 'ADD TO BAG';
-                     return;
-                 }
-                 await updateDoc(doc(db, "cart", preValSourceRefObjCheckValueExecuteCodeDoneFastValidProcessClear.id), { quantity: combValueLimitCodeActionWorkingTargetVerified });
-             } else {
-                 await addDoc(databaseColReferenceTrackerSetupExecuteSystemEngineActionProcessCompleted, {
-                      userId: executingValidLiveLoggedSecureSessionClientIdentPasserUIDSystemValueCodeReady.uid,
-                      productId: activeLoadedDbProductObjGlobalScopeStoreValCheckedSafeExecutePass.id,
-                      name: activeLoadedDbProductObjGlobalScopeStoreValCheckedSafeExecutePass.name,
-                      price: activeLoadedDbProductObjGlobalScopeStoreValCheckedSafeExecutePass.price,
-                      size: appChosenSizeModeNodeObjKeyStrVal,
-                      color: appChosenColorModelNodeVariant,
-                      image: appChosenVariantImageStrLink,
-                      quantity: 1, // simplified to +1 clicking the Huge add button
-                      addedAt: serverTimestamp()
-                 });
-             }
-             
-             // Final confirmation text GUI popup logic check complete output clean
-             Swal.fire({
-                 title: 'ADDED SUCCESS!', 
-                 text: `Saved Fashion Article Data Execute Size Code Working Successful Functional Fast Done Check Clean Perfect Finished Clear Safe Run Function Completed Setup Executable Passed Check Executed Code: ${appChosenSizeModeNodeObjKeyStrVal}, C: ${appChosenColorModelNodeVariant}`, 
-                 icon: 'success', toast:true, timer:2000, position:'top-end', showConfirmButton:false
-             });
-             
-         } catch(systemExcpEngineCheckValidOutputCodeErrorWarningMessageConfigTargetOutputDataCleanFinishProcessSetupSuccessfulProcessCheckPassed) {
-             console.error(systemExcpEngineCheckValidOutputCodeErrorWarningMessageConfigTargetOutputDataCleanFinishProcessSetupSuccessfulProcessCheckPassed); Swal.fire('Error Check Run Config Error Notice Catch Functional Data Failure Result Function Complete Successful Error Message Code Verified Clean Executed Action Secure Setup', systemExcpEngineCheckValidOutputCodeErrorWarningMessageConfigTargetOutputDataCleanFinishProcessSetupSuccessfulProcessCheckPassed.message, 'error');
-         } finally {
-             mainActionDatabaseInjectionControlPointerSetupClickButtonProcess.innerText = 'ADD TO BAG';
-         }
+// COLORS
+function renderColorOptions() {
+    let colors = currentProduct.colors;
+    if (typeof colors === 'string') colors = colors.split(',').map(c => c.trim());
+    
+    let html = '';
+    colors.forEach(col => {
+        if(col) html += `<div class="select-btn color-btn" data-color="${col}">${col}</div>`;
     });
+    document.getElementById('color-options').innerHTML = html;
+
+    const btns = document.querySelectorAll('.color-btn');
+    btns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            btns.forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            selectedColor = e.currentTarget.getAttribute('data-color');
+            document.getElementById('disp-color-select').innerText = selectedColor;
+            checkStockMessage();
+        });
+    });
+
+    // Auto-select if only 1 color exists
+    if(btns.length === 1) btns[0].click();
+}
+
+// SIZES
+function renderSizeOptions() {
+    const sizeMap = currentProduct.sizes;
+    let html = '';
+    const orderedSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+
+    orderedSizes.forEach(s => {
+        const availableStock = parseInt(sizeMap[s] || 0);
+        let outStockClass = availableStock <= 0 ? 'out-of-stock' : '';
+        html += `<div class="select-btn size-btn ${outStockClass}" data-size="${s}" data-stock="${availableStock}">${s}</div>`;
+    });
+    document.getElementById('size-options').innerHTML = html;
+
+    const btns = document.querySelectorAll('.size-btn');
+    btns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const btnTarget = e.currentTarget;
+            if(btnTarget.classList.contains('out-of-stock')) return; 
+
+            btns.forEach(b => b.classList.remove('active'));
+            btnTarget.classList.add('active');
+            
+            selectedSize = btnTarget.getAttribute('data-size');
+            document.getElementById('disp-size-select').innerText = selectedSize;
+            
+            let maxLimit = parseInt(btnTarget.getAttribute('data-stock'));
+            if(currentQty > maxLimit) {
+                currentQty = 1;
+                qtyInput.value = 1;
+            }
+            checkStockMessage();
+        });
+    });
+}
+
+function checkStockMessage() {
+    if (selectedColor && selectedSize) {
+        let maxLimit = parseInt(currentProduct.sizes[selectedSize] || 0);
+        stockStatusText.innerHTML = `<span style="color:var(--success);"><i class="fas fa-check-circle"></i> Item Available (${maxLimit} in stock)</span>`;
+    } else {
+        stockStatusText.innerHTML = `<span style="color:#777;"><i class="fas fa-info-circle"></i> Select Size & Color to add to cart</span>`;
+    }
+}
+
+// ACTIONS
+function setupButtons() {
+    document.getElementById('qty-plus').addEventListener('click', () => {
+        if (!selectedSize) {
+            Swal.fire('Oops!', 'Select your Size first!', 'info'); return;
+        }
+        let maxLimit = parseInt(currentProduct.sizes[selectedSize]);
+        if(currentQty < maxLimit) {
+            currentQty++;
+            qtyInput.value = currentQty;
+        } else {
+            Swal.fire('Limit Alert', `Only ${maxLimit} pieces available.`, 'warning');
+        }
+    });
+
+    document.getElementById('qty-minus').addEventListener('click', () => {
+        if (currentQty > 1) {
+            currentQty--;
+            qtyInput.value = currentQty;
+        }
+    });
+
+    document.getElementById('btn-cart').addEventListener('click', () => processOrderAddition(false));
+    document.getElementById('btn-buy').addEventListener('click', () => processOrderAddition(true));
+}
+
+// CART ADD PROCESS
+async function processOrderAddition(goToCheckout) {
+    if(!sessionUser) {
+        Swal.fire({
+            title: 'Please Login', text: 'You must login before adding items to cart.', icon: 'info', confirmButtonText: 'Go to Login'
+        }).then(r => { if(r.isConfirmed) window.location.href='login.html'; });
+        return;
+    }
+
+    if(!selectedSize || !selectedColor) {
+        Swal.fire('Select Options', 'Please select both COLOR and SIZE variations!', 'error');
+        return;
+    }
+
+    try {
+        const btnId = goToCheckout ? 'btn-buy' : 'btn-cart';
+        document.getElementById(btnId).innerText = 'Processing...';
+        document.getElementById(btnId).disabled = true;
+        
+        const cartRef = collection(db, "cart");
+        const queryMatches = query(cartRef, 
+            where("userId", "==", sessionUser.uid),
+            where("productId", "==", currentProduct.id),
+            where("size", "==", selectedSize),
+            where("color", "==", selectedColor)
+        );
+
+        const snapshotData = await getDocs(queryMatches);
+        const imageUrlToSave = (currentProduct.images && currentProduct.images.length > 0) ? currentProduct.images[0] : 'assets/images/placeholder.jpg';
+
+        if (!snapshotData.empty) {
+            let activeDoc = snapshotData.docs[0];
+            let newTotalQty = activeDoc.data().quantity + currentQty;
+            
+            const limit = parseInt(currentProduct.sizes[selectedSize]);
+            if(newTotalQty > limit) {
+                Swal.fire('Maxed Out!', `Cannot add more. Limit is ${limit} pieces!`, 'warning');
+                document.getElementById(btnId).innerHTML = goToCheckout ? 'BUY NOW' : 'ADD TO BAG';
+                document.getElementById(btnId).disabled = false;
+                return;
+            }
+
+            await updateDoc(doc(db, "cart", activeDoc.id), { quantity: newTotalQty });
+        } else {
+            await addDoc(cartRef, {
+                userId: sessionUser.uid,
+                productId: currentProduct.id,
+                name: currentProduct.name,
+                price: currentProduct.price,
+                image: imageUrlToSave,
+                quantity: currentQty,
+                size: selectedSize,    
+                color: selectedColor,  
+                addedAt: serverTimestamp()
+            });
+        }
+
+        if(goToCheckout) {
+            window.location.href = 'cart.html';
+        } else {
+            Swal.fire({
+                icon: 'success', title: 'Added to Bag!', html: `Size: <b>${selectedSize}</b> | Color: <b>${selectedColor}</b>`, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
+            });
+            document.getElementById(btnId).innerHTML = '<i class="fas fa-shopping-bag"></i> ADD TO BAG';
+            document.getElementById(btnId).disabled = false;
+        }
+
+    } catch(err) {
+        console.error(err);
+        Swal.fire("Add Process Failed", err.message, "error");
+        document.getElementById(goToCheckout ? 'btn-buy' : 'btn-cart').disabled = false;
+    }
 }
