@@ -3,101 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clothing Details | Official Store</title>
-    
+    <title>Product Details - Premium Fashion</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
-
-    <!-- Specific Premium Clothing Brand Page Styling -->
     <style>
-        .p-detail-container { padding: 40px 0; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 55% 45%; gap: 60px;}
+        .product-page-wrapper { padding: 40px 15px 80px 15px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; }
+        .premium-gallery { display: flex; flex-direction: row-reverse; gap: 20px; height: 500px; }
+        .main-img-box { flex: 1; border-radius: 12px; overflow: hidden; background: #fff; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+        .main-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .thumb-box { width: 90px; height: 100%; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+        .thumb-box::-webkit-scrollbar { width: 0; } 
+        .thumb-img { width: 100%; height: 90px; border-radius: 8px; border: 2px solid transparent; overflow: hidden; cursor: pointer; flex-shrink: 0; background: #fff; transition: 0.3s;}
+        .thumb-img img { width: 100%; height: 100%; object-fit: cover; }
+        .thumb-img.active { border-color: var(--text-main); }
+        .thumb-img:hover { filter: brightness(0.9); }
 
-        /* Fast Image Layout - Big Fashion Pictures */
-        .image-col { display: flex; flex-direction: row-reverse; gap: 20px; position: sticky; top: 80px; height: calc(100vh - 120px);}
-        .main-img-wrap { flex: 1; border-radius: var(--border-radius); background: #f4f4f4; overflow: hidden;}
-        .main-img-wrap img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+        .info-panel { display: flex; flex-direction: column; }
+        .cat-name { color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 5px; font-weight: 600; letter-spacing: 1px;}
+        .title { font-size: 2.2rem; font-weight: 700; margin-bottom: 15px; color: var(--text-main); line-height: 1.3;}
         
-        .thumb-list { width: 80px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto;}
-        .thumb-list::-webkit-scrollbar { width: 4px; }
-        .thumb-item { height: 100px; border-radius: 4px; overflow: hidden; opacity: 0.5; transition: 0.3s; cursor: pointer; border: 1px solid #ddd;}
-        .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
-        .thumb-item.active, .thumb-item:hover { opacity: 1; border-color: var(--primary-color);}
+        .price-row { display: flex; align-items: baseline; gap: 15px; margin-bottom: 30px; }
+        .price { font-size: 2.2rem; font-weight: 700; color: var(--primary-color); }
+        .old-price { font-size: 1.2rem; text-decoration: line-through; color: var(--text-muted); }
+        .discount-badge { background: #ff4757; color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 0.9rem; font-weight: 600;}
 
-        /* Information Column */
-        .info-col { padding: 10px 0;}
-        .breadcrumb { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; font-weight: 500;}
-        .product-title { font-size: 2rem; font-weight: 700; color: var(--primary-color); line-height: 1.2; margin-bottom: 10px; letter-spacing: -0.5px;}
-        .product-pricing { display: flex; align-items: baseline; gap: 15px; margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;}
-        .price { font-size: 2.2rem; font-weight: 700;}
-        .price-old { text-decoration: line-through; color: var(--text-muted); font-size: 1.2rem;}
-
-        /* Colors Custom Select */
-        .attr-box { margin-bottom: 25px; }
-        .attr-title { font-size: 0.95rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; display: flex; justify-content: space-between;}
-        .color-list { display: flex; gap: 12px; flex-wrap: wrap; }
-        .color-node { 
-            padding: 10px 20px; font-size: 0.9rem; font-weight: 500; border: 1px solid var(--border-color); 
-            border-radius: 40px; cursor: pointer; transition: 0.2s; color: var(--text-main); background: var(--bg-main);
-        }
-        .color-node:hover { border-color: var(--text-main); }
-        .color-node.active { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
-
-        /* Sizes Custom Select */
-        .size-list { display: flex; gap: 12px; flex-wrap: wrap; }
-        .size-node {
-            width: 60px; height: 60px; border: 1px solid var(--border-color); display: flex; justify-content: center; align-items: center;
-            font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; background: var(--white);
-        }
-        .size-node:hover:not(.empty) { border-color: var(--primary-color); }
-        .size-node.active { border-color: var(--primary-color); background: var(--primary-color); color: #fff; }
-        .size-node.empty { background: #f5f5f5; color: #ddd; text-decoration: line-through; cursor: not-allowed; border-color: #f1f1f1;}
+        .variant-box { margin-bottom: 25px; }
+        .variant-box label { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 12px; font-size: 1rem; color: var(--text-main);}
+        .selected-value { color: var(--text-muted); font-size: 0.9rem; font-weight: 500;}
+        .variant-list { display: flex; flex-wrap: wrap; gap: 12px; }
         
-        .stock-txt { font-size: 0.9rem; color: #e74c3c; font-weight: 600;}
+        .select-btn { border: 2px solid #e0e0e0; background: #fff; padding: 10px 22px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; color: var(--text-main); font-size: 1.05rem; }
+        .select-btn:hover:not(.out-of-stock) { border-color: var(--text-main); }
+        .select-btn.active { background: var(--text-main); color: #fff; border-color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .select-btn.out-of-stock { background: #f9f9f9; color: #c4c4c4; border-color: #eee; cursor: not-allowed; text-decoration: line-through; }
+        .color-btn { border-radius: 30px; padding: 8px 25px; }
 
-        /* Powerful Cart Actions Matrix */
-        .interaction-matrix { margin-top: 40px; margin-bottom: 40px;}
+        .status-msg { margin-bottom: 25px; font-size: 0.95rem; font-weight: 500; display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 8px; background: #f8f9fa; border: 1px dashed #ddd;}
+
+        .action-flex { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;}
+        .qty-controls { display: flex; align-items: center; border: 2px solid #e0e0e0; border-radius: 8px; height: 55px; background: #fff;}
+        .qty-controls button { width: 50px; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); font-weight: bold;}
+        .qty-controls input { width: 50px; text-align: center; border: none; font-weight: bold; font-size: 1.2rem; outline: none; background: transparent; color: var(--text-main);}
+
+        .btn-add { flex: 1; border: 2px solid var(--text-main); color: var(--text-main); background: #fff; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 1.1rem;}
+        .btn-add:hover { background: var(--text-main); color: #fff; }
         
-        /* New Custom Minimal UI Buttons */
-        .huge-cart-btn {
-            width: 100%; display: flex; justify-content: center; align-items: center; gap: 15px;
-            padding: 18px 0; background: var(--primary-color); color: #fff; border: none;
-            font-size: 1.15rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
-            cursor: pointer; transition: 0.3s; margin-bottom: 15px; position: relative; overflow: hidden;
-        }
-        .huge-cart-btn:hover { background: var(--text-main); box-shadow: 0 10px 20px rgba(0,0,0,0.15); transform: translateY(-2px);}
-        
-        /* Order Directly Checkout Outline Button */
-        .checkout-direct-btn {
-            width: 100%; padding: 18px 0; border: 1px solid var(--primary-color); background: #fff; color: var(--primary-color);
-            font-size: 1rem; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: 0.3s; letter-spacing: 1px;
-        }
-        .checkout-direct-btn:hover { background: #fafafa; }
+        .btn-buy { width: 100%; height: 55px; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;}
+        .btn-buy:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3); }
 
-        /* Delivery Features */
-        .assurance-strip { display: flex; gap: 20px; margin-bottom: 30px; font-size: 0.85rem; color: var(--text-muted); font-weight: 500;}
-        .assurance-strip i { margin-right: 5px; font-size: 1rem; color: var(--primary-color); }
+        .desc-box { border-top: 1px solid var(--border-color); padding-top: 25px; margin-top: 30px; }
+        .desc-box h4 { margin-bottom: 10px; font-size: 1.3rem; color: var(--text-main);}
+        .desc-box p { color: var(--text-muted); line-height: 1.8; font-size: 1rem; }
 
-        /* Core Fashion Descriptions */
-        .collapse-accordion { border-top: 1px solid var(--border-color); padding-top: 30px;}
-        .collapse-title { font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 1rem; margin-bottom: 15px;}
-        .desc-text { color: #555; line-height: 1.9; font-size: 0.95rem; margin-bottom: 20px;}
-
-        /* Heavy Mobility Optimizations */
         @media(max-width: 992px){
-            .p-detail-container { grid-template-columns: 1fr; padding: 10px 15px 40px 15px; gap: 30px;}
-            .image-col { flex-direction: column; position: relative; height: auto; top: 0; }
-            .main-img-wrap { height: 50vh;} /* Dynamic view sizing */
-            .thumb-list { flex-direction: row; width: 100%; overflow-x: auto;}
-            .thumb-list::-webkit-scrollbar { height: 0;}
-            .thumb-item { flex: 0 0 70px; height: 90px;}
-            .interaction-matrix {
-                position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; z-index: 100;
-                padding: 15px; margin: 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); border-top: 1px solid var(--border-color); display: flex; gap:10px;
-            }
-            .huge-cart-btn, .checkout-direct-btn { margin-bottom: 0; padding: 14px 0;}
-            /* Push layout down */
-            body { padding-bottom: 100px; }
+            .product-page-wrapper { grid-template-columns: 1fr; padding-top: 20px; gap: 20px; }
+            .premium-gallery { flex-direction: column; height: auto; }
+            .main-img-box { width: 100%; height: 450px; border-radius: 12px; }
+            .thumb-box { width: 100%; height: auto; flex-direction: row; }
+            .thumb-img { width: 80px; height: 80px; }
+            .title { font-size: 1.6rem; margin-bottom: 10px;}
+            .price { font-size: 1.8rem; }
+            .qty-controls { width: 100%; justify-content: space-between; }
+            .qty-controls button { width: 60px;}
+            .qty-controls input { flex:1; }
+            .btn-add { height: 55px; }
+            .btn-add, .btn-buy, .qty-controls { flex-basis: 100%; } 
+            body { padding-bottom: 60px; } 
+        }
+        @media(max-width: 480px) {
+            .main-img-box { height: 350px; }
+            .thumb-img { width: 70px; height: 70px; }
         }
     </style>
 </head>
@@ -106,72 +82,69 @@
     <header class="header">
         <div class="container navbar">
             <div class="logo"><a href="index.html"><h2>Ghorer<span>Bazar</span></h2></a></div>
-            <div class="nav-icons"><a href="cart.html" class="icon-link"><i class="fas fa-shopping-bag"></i><span id="cart-badge" class="badge">0</span></a></div>
+            <div class="nav-icons">
+                <a href="cart.html" class="icon-link">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span id="cart-badge" class="badge" style="display:none;">0</span>
+                </a>
+            </div>
         </div>
     </header>
 
-    <!-- App Initial Loader (Elegant) -->
-    <div id="loader-display" class="loader-container">
-        <div style="text-align: center; color: var(--primary-color);">
-            <i class="fas fa-circle-notch fa-spin" style="font-size: 2.5rem; margin-bottom:15px;"></i>
-            <h4 style="font-weight: 500; text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem;">Fetching Collection...</h4>
-        </div>
+    <div id="loading-ui" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; color: var(--text-muted);">
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; margin-bottom: 20px; color: var(--primary-color);"></i>
+        <h3>Unfolding Latest Collection...</h3>
     </div>
 
-    <!-- MAIN PRODUCT DATA RENDER BODY -->
-    <main class="container p-detail-container" id="product-container" style="display:none;">
-        
-        <!-- Imagery Rendering Gallery Module -->
-        <div class="image-col">
-            <div class="main-img-wrap">
-                <img id="d-main-img" src="" alt="Cloth Render">
-            </div>
-            <!-- Custom Gallery Generated From Variants Below -->
-            <div class="thumb-list" id="d-thumbs-inject"></div>
+    <div class="product-page-wrapper" id="content-ui" style="display: none;">
+        <div class="premium-gallery">
+            <div class="main-img-box"><img id="main-image" src="" alt="Main Fashion Display"></div>
+            <div class="thumb-box" id="thumb-container"></div>
         </div>
 
-        <!-- System & Choice Interfaces Module -->
-        <div class="info-col">
-            <div class="breadcrumb" id="d-category">Men's Premium T-Shirts</div>
-            <h1 class="product-title" id="d-title">Title Empty</h1>
+        <div class="info-panel">
+            <div class="cat-name" id="product-category">LATEST COLLECTION</div>
+            <h1 class="title" id="product-title">Loading...</h1>
             
-            <div class="product-pricing">
-                <div class="price" id="d-price">৳0</div>
-                <div class="price-old" id="d-old-price" style="display: none;">৳0</div>
+            <div class="price-row">
+                <span class="price" id="product-price">৳0</span>
+                <span class="old-price" id="product-old-price" style="display:none;">৳0</span>
+                <span class="discount-badge" id="product-discount" style="display:none;">Sale!</span>
             </div>
 
-            <!-- NEW! Clothing Variant Color Choices Matrix-->
-            <div class="attr-box">
-                <div class="attr-title"><span>Available Colors</span> <span id="label-sel-col" style="color:var(--text-muted); font-weight:400; text-transform: capitalize;">Select Below</span></div>
-                <div class="color-list" id="d-color-list"></div>
+            <div class="variant-box">
+                <label>Color Options <span class="selected-value" id="disp-color-select">Not Selected</span></label>
+                <div class="variant-list" id="color-options"></div>
             </div>
 
-            <!-- NEW! Clothing Sizes Mapping Choice Target Data Linked Limit Object  -->
-            <div class="attr-box">
-                <div class="attr-title"><span>Select Size</span> <span id="label-stock-live" class="stock-txt"></span></div>
-                <div class="size-list" id="d-size-list">
-                    <span style="font-size: 0.9rem; color: #888;">Select a color first...</span>
+            <div class="variant-box">
+                <label>Available Sizes <span class="selected-value" id="disp-size-select">Not Selected</span></label>
+                <div class="variant-list" id="size-options"></div>
+            </div>
+
+            <div class="status-msg" id="stock-status">
+                <i class="fas fa-bell"></i> Pick a combination to view live warehouse stock limit.
+            </div>
+
+            <div class="action-flex">
+                <div class="qty-controls">
+                    <button id="qty-minus"><i class="fas fa-minus" style="font-size:1rem;"></i></button>
+                    <input type="number" id="qty-val" value="1" readonly>
+                    <button id="qty-plus"><i class="fas fa-plus" style="font-size:1rem;"></i></button>
                 </div>
-            </div>
-
-            <!-- Dynamic System Cart Handlers Buttons Mobile Action Base -->
-            <div class="interaction-matrix">
-                <button class="huge-cart-btn" id="d-add-cart">ADD TO BAG</button>
+                <!-- Add to bag button -->
+                <button class="btn-add" id="btn-cart"><i class="fas fa-shopping-bag"></i> ADD TO BAG</button>
             </div>
             
-            <!-- Extra info -->
-            <div class="assurance-strip">
-                <div><i class="fas fa-truck"></i> Express Delivery</div>
-                <div><i class="fas fa-undo-alt"></i> 7-Days Easy Return</div>
-            </div>
+            <!-- BUY NOW BUTTON UPDATED FOR HIGH CONVERSION -->
+            <button class="btn-buy" id="btn-buy"><i class="fas fa-bolt"></i> BUY NOW</button>
 
-            <!-- Descriptions Component Display Render-->
-            <div class="collapse-accordion">
-                <div class="collapse-title">Product Details & Fabric</div>
-                <div class="desc-text" id="d-description">Loading features...</div>
+            <div class="desc-box">
+                <h4>Fabric & Description</h4>
+                <p id="product-desc"></p>
             </div>
         </div>
-    </main>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module" src="assets/js/product.js"></script>
