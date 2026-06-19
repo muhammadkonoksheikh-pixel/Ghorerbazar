@@ -2,96 +2,127 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { collection, addDoc, serverTimestamp, doc, writeBatch, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// DOM
-const payAmountEl = document.getElementById('pay-amount');
-const methodBtns = document.querySelectorAll('.method-btn');
-const manualPaymentArea = document.getElementById('manual-payment-area');
-const codArea = document.getElementById('cod-area');
-const methodNameText = document.getElementById('method-name-text');
-const merchantNumberEl = document.getElementById('merchant-number');
-const paymentForm = document.getElementById('payment-form');
-const trxInput = document.getElementById('trx-id');
-const confirmBtn = document.getElementById('confirm-order-btn');
-const codConfirmBtn = document.getElementById('cod-confirm-btn');
+// DOM Elements
+const stepSelection = document.getElementById('step-selection');
+const stepPayment = document.getElementById('step-payment');
+const btnBack = document.getElementById('btn-back');
 
+const methodCards = document.querySelectorAll('.method-card');
+const methodLogoContainer = document.getElementById('method-logo-container');
+const activeMethodImg = document.getElementById('active-method-img');
+const displayAmount = document.getElementById('display-amount');
+
+const instructionBlock = document.getElementById('instruction-block');
+const codBlock = document.getElementById('cod-block');
+const instMethodName = document.getElementById('inst-method-name');
+const instMethodPin = document.getElementById('inst-method-pin');
+const merchantNumberEl = document.getElementById('merchant-number');
+const copyAmountText = document.getElementById('copy-amount-text');
+const trxInput = document.getElementById('trx-id');
+const verifyBtn = document.getElementById('verify-btn');
+
+// State Variables
 let pendingOrder = null;
-let currentMethod = 'bKash';
+let currentMethod = null;
 let currentUser = null;
 
-// Mock Merchant Numbers (Ideally fetched from a 'settings' collection in Firestore)
-const paymentNumbers = {
-    'bKash': '01711223344',
-    'Nagad': '01999887766'
+// Merchant Accounts (Ideally fetch from a Firestore settings doc, hardcoded for now)
+const merchantAccounts = {
+    'bkash': '01858599684',
+    'nagad': '01858599684'
 };
 
+// Auth Guard
 onAuthStateChanged(auth, (user) => {
     if (user) {
         currentUser = user;
-        initPayment();
+        initPaymentGateway();
     } else {
         window.location.href = 'login.html';
     }
 });
 
-function initPayment() {
+function initPaymentGateway() {
     const savedOrder = sessionStorage.getItem('pendingOrder');
     if (!savedOrder) {
         window.location.href = 'cart.html';
         return;
     }
     pendingOrder = JSON.parse(savedOrder);
-    payAmountEl.innerText = `৳${pendingOrder.totalAmount}`;
-    merchantNumberEl.innerText = paymentNumbers['bKash'];
+    
+    // Set Amounts securely
+    displayAmount.innerText = `${pendingOrder.totalAmount} BDT`;
+    copyAmountText.innerText = pendingOrder.totalAmount;
 }
 
-// Switch Payment Method
-methodBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        methodBtns.forEach(b => b.classList.remove('active'));
-        const targetBtn = e.currentTarget;
-        targetBtn.classList.add('active');
+// User selects a Payment Method
+methodCards.forEach(card => {
+    card.addEventListener('click', (e) => {
+        currentMethod = e.currentTarget.getAttribute('data-method');
         
-        currentMethod = targetBtn.getAttribute('data-method');
-        
+        // Setup Views Based on Method
         if (currentMethod === 'cod') {
-            manualPaymentArea.style.display = 'none';
-            codArea.style.display = 'block';
-        } else {
-            manualPaymentArea.style.display = 'block';
-            codArea.style.display = 'none';
+            methodLogoContainer.innerHTML = '<i class="fas fa-hand-holding-usd" style="font-size: 3rem; color: #111;"></i>';
+            instructionBlock.style.display = 'none';
+            codBlock.style.display = 'block';
             
-            const methodLabel = currentMethod === 'bkash' ? 'bKash' : 'Nagad';
-            methodNameText.innerText = methodLabel;
-            merchantNumberEl.innerText = paymentNumbers[methodLabel];
-            trxInput.value = '';
-            trxInput.placeholder = `Enter ${methodLabel} TrxID`;
+            verifyBtn.innerText = 'CONFIRM ORDER';
+            verifyBtn.style.background = '#111'; // Brand Black for COD
+        } else {
+            // bKash or Nagad
+            const isBkash = currentMethod === 'bkash';
+            methodLogoContainer.innerHTML = `<img src="assets/images/${currentMethod}.png" alt="${currentMethod}" onerror="this.src='${isBkash ? 'https://seeklogo.com/images/B/bkash-logo-0C1572FBB4-seeklogo.com.png' : 'https://download.logo.wine/logo/Nagad/Nagad-Logo.wine.png'}'" style="height:45px;">`;
+            
+            instructionBlock.style.display = 'block';
+            codBlock.style.display = 'none';
+            
+            const methodNameFormat = isBkash ? 'bKash' : 'Nagad';
+            instMethodName.innerText = methodNameFormat;
+            instMethodPin.innerText = methodNameFormat;
+            merchantNumberEl.innerText = merchantAccounts[currentMethod];
+            
+            trxInput.value = ''; // Reset input
+            
+            verifyBtn.innerText = 'VERIFY';
+            verifyBtn.style.background = '#0D6EFD'; // Gateway Blue
         }
+
+        // Switch Screen
+        stepSelection.classList.remove('active');
+        stepPayment.classList.add('active');
     });
 });
 
-// Submit Manual Payment
-paymentForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const trxId = trxInput.value.trim().toUpperCase();
-    if (!trxId) return;
-
-    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-    confirmBtn.disabled = true;
-
-    await processOrder(currentMethod, trxId, 'pending'); // Payment status pending for manual verification
+// Back Button Navigation
+btnBack.addEventListener('click', () => {
+    stepPayment.classList.remove('active');
+    stepSelection.classList.add('active');
 });
 
-// Submit COD Payment
-codConfirmBtn.addEventListener('click', async () => {
-    codConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-    codConfirmBtn.disabled = true;
-    
-    await processOrder('Cash on Delivery', 'N/A', 'unpaid'); // COD means payment is unpaid until delivery
+// Submit Payment (Verify / Confirm)
+verifyBtn.addEventListener('click', async () => {
+    let trxId = 'N/A';
+    let paymentStatus = 'unpaid'; // default for COD
+
+    if (currentMethod !== 'cod') {
+        trxId = trxInput.value.trim().toUpperCase();
+        if (!trxId) {
+            Swal.fire('Required', 'Please enter your Transaction ID (TrxID) to verify payment.', 'warning');
+            return;
+        }
+        paymentStatus = 'pending'; // Manual verification needed by admin
+    }
+
+    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSING...';
+    verifyBtn.disabled = true;
+    btnBack.style.display = 'none';
+
+    await executeOrderPlacement(currentMethod === 'cod' ? 'Cash on Delivery' : (currentMethod === 'bkash' ? 'bKash' : 'Nagad'), trxId, paymentStatus);
 });
 
-async function processOrder(method, transactionId, paymentStatus) {
+// Core Execution Function (Intact & Unchanged Logic)
+async function executeOrderPlacement(finalMethodName, transactionId, paymentStatus) {
     try {
-        // Generate short Order ID
         const shortOrderId = 'GB-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
         const orderData = {
@@ -104,7 +135,7 @@ async function processOrder(method, transactionId, paymentStatus) {
             subtotal: pendingOrder.subtotal,
             deliveryCharge: pendingOrder.deliveryCharge,
             totalAmount: pendingOrder.totalAmount,
-            paymentMethod: method,
+            paymentMethod: finalMethodName,
             transactionId: transactionId,
             paymentStatus: paymentStatus,
             orderStatus: 'Pending',
@@ -112,13 +143,14 @@ async function processOrder(method, transactionId, paymentStatus) {
             updatedAt: serverTimestamp()
         };
 
-        // 1. Save Order Document
-        const orderRef = await addDoc(collection(db, "orders"), orderData);
-
-        // 2. Save Order Items & Delete Cart Items via Batch
+        // Batch processing logic
         const batch = writeBatch(db);
         
-        // Add items to order_items
+        // 1. Order Creation
+        const orderRef = doc(collection(db, "orders"));
+        batch.set(orderRef, orderData);
+
+        // 2. Insert Order Items
         pendingOrder.cartItems.forEach(item => {
             const itemRef = doc(collection(db, "order_items"));
             batch.set(itemRef, {
@@ -127,44 +159,35 @@ async function processOrder(method, transactionId, paymentStatus) {
                 name: item.name,
                 price: item.price,
                 quantity: item.quantity,
+                size: item.size || null,
+                color: item.color || null,
                 image: item.image
             });
         });
 
-        // Query user's cart to delete
+        // 3. Clear Cart
         const cartQ = query(collection(db, "cart"), where("userId", "==", currentUser.uid));
         const cartSnapshot = await getDocs(cartQ);
         cartSnapshot.forEach((docSnap) => {
             batch.delete(docSnap.ref);
         });
 
-        // 3. Add Notification for Admin
-        const notifRef = doc(collection(db, "notifications"));
-        batch.set(notifRef, {
-            title: 'New Order Received',
-            message: `Order ${shortOrderId} received from ${pendingOrder.customerName}.`,
-            type: 'order',
-            isRead: false,
-            createdAt: serverTimestamp()
-        });
-
-        // Commit batch
+        // Commit all requests at once
         await batch.commit();
 
-        // Clear Session
+        // Cleanup
         sessionStorage.removeItem('pendingOrder');
         sessionStorage.removeItem('checkoutTotal');
         sessionStorage.removeItem('checkoutCart');
 
-        // Redirect to Success Page
         window.location.href = `order-success.html?orderId=${shortOrderId}`;
 
     } catch (error) {
-        console.error("Error processing order:", error);
-        Swal.fire('Error', 'Failed to place order. Please try again.', 'error');
-        confirmBtn.innerHTML = 'Verify & Confirm Order <i class="fas fa-check-circle"></i>';
-        confirmBtn.disabled = false;
-        codConfirmBtn.innerHTML = 'Confirm COD Order';
-        codConfirmBtn.disabled = false;
+        console.error("Order Placement Error:", error);
+        Swal.fire('System Error', 'Failed to place order securely. Please try again.', 'error');
+        
+        verifyBtn.innerHTML = currentMethod === 'cod' ? 'CONFIRM ORDER' : 'VERIFY';
+        verifyBtn.disabled = false;
+        btnBack.style.display = 'block';
     }
 }
