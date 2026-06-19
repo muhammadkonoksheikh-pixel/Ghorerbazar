@@ -11,7 +11,7 @@
         .product-page-wrapper { padding: 40px 15px 80px 15px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; }
         .premium-gallery { display: flex; flex-direction: row-reverse; gap: 20px; height: 500px; }
         .main-img-box { flex: 1; border-radius: 12px; overflow: hidden; background: #fff; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
-        .main-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .main-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; transition: 0.3s; }
         .thumb-box { width: 90px; height: 100%; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
         .thumb-box::-webkit-scrollbar { width: 0; } 
         .thumb-img { width: 100%; height: 90px; border-radius: 8px; border: 2px solid transparent; overflow: hidden; cursor: pointer; flex-shrink: 0; background: #fff; transition: 0.3s;}
@@ -41,18 +41,22 @@
 
         .status-msg { margin-bottom: 25px; font-size: 0.95rem; font-weight: 500; display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 8px; background: #f8f9fa; border: 1px dashed #ddd;}
 
-        .action-flex { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;}
+        /* Modern Unified Buttons Panel */
+        .action-flex { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; align-items: stretch;}
+        
         .qty-controls { display: flex; align-items: center; border: 2px solid #e0e0e0; border-radius: 8px; height: 55px; background: #fff;}
-        .qty-controls button { width: 50px; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); font-weight: bold;}
+        .qty-controls button { width: 50px; height: 100%; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); font-weight: bold;}
         .qty-controls input { width: 50px; text-align: center; border: none; font-weight: bold; font-size: 1.2rem; outline: none; background: transparent; color: var(--text-main);}
 
-        .btn-add { flex: 1; border: 2px solid var(--text-main); color: var(--text-main); background: #fff; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 1.1rem; text-transform: uppercase;}
+        .cart-btns { display: flex; gap: 15px; flex: 1; min-width: 300px; }
+        
+        .btn-add { flex: 1; border: 2px solid var(--text-main); color: var(--text-main); background: #fff; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 1.1rem; text-transform: uppercase; height: 55px;}
         .btn-add:hover { background: var(--text-main); color: #fff; }
         
-        .btn-buy { width: 100%; height: 55px; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase;}
-        .btn-buy:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3); }
+        .btn-buy { flex: 1; height: 55px; background: var(--primary-color); color: #fff; border: 2px solid var(--primary-color); border-radius: 8px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2);}
+        .btn-buy:hover { transform: translateY(-2px); filter: brightness(1.2); box-shadow: 0 8px 20px rgba(46, 125, 50, 0.3); }
 
-        .desc-box { border-top: 1px solid var(--border-color); padding-top: 25px; margin-top: 30px; }
+        .desc-box { border-top: 1px solid var(--border-color); padding-top: 25px; margin-top: 20px; }
         .desc-box h4 { margin-bottom: 10px; font-size: 1.3rem; color: var(--text-main);}
         .desc-box p { color: var(--text-muted); line-height: 1.8; font-size: 1rem; }
 
@@ -64,12 +68,18 @@
             .thumb-img { width: 80px; height: 80px; }
             .title { font-size: 1.6rem; margin-bottom: 10px;}
             .price { font-size: 1.8rem; }
+            
+            /* Responsive Buttons Stacking */
+            .action-flex { flex-direction: column; }
             .qty-controls { width: 100%; justify-content: space-between; }
             .qty-controls button { width: 60px;}
             .qty-controls input { flex:1; }
-            .btn-add { height: 55px; }
-            .btn-add, .btn-buy, .qty-controls { flex-basis: 100%; } 
+            .cart-btns { flex-direction: row; width: 100%; min-width: unset;}
+            
             body { padding-bottom: 60px; } 
+        }
+        @media(max-width: 480px){
+            .cart-btns { flex-direction: column; }
         }
     </style>
 </head>
@@ -82,8 +92,9 @@
         </div>
     </header>
 
-    <div id="fast-loader" style="text-align:center; padding:50px; font-weight:600; color:#888;">
-        Fetching Details...
+    <div id="fast-loader" style="text-align:center; padding:100px 20px; color:#888;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; margin-bottom: 15px; color: var(--primary-color);"></i>
+        <h3>Fetching Latest Collection...</h3>
     </div>
 
     <div class="product-page-wrapper" id="fast-content" style="display: none;">
@@ -113,19 +124,21 @@
             </div>
 
             <div class="status-msg" id="stock-status">
-                <i class="fas fa-bell"></i> Pick a combination to view live warehouse stock limit.
+                <i class="fas fa-bell"></i> Pick a combination to view live stock.
             </div>
 
+            <!-- Beautiful Dual Buttons Section -->
             <div class="action-flex">
                 <div class="qty-controls">
                     <button id="qty-minus"><i class="fas fa-minus" style="font-size:1rem;"></i></button>
                     <input type="number" id="qty-val" value="1" readonly>
                     <button id="qty-plus"><i class="fas fa-plus" style="font-size:1rem;"></i></button>
                 </div>
-                <button class="btn-add" id="btn-cart"><i class="fas fa-shopping-bag"></i> Add To Bag</button>
+                <div class="cart-btns">
+                    <button class="btn-add" id="btn-cart"><i class="fas fa-shopping-bag"></i> ADD TO BAG</button>
+                    <button class="btn-buy" id="btn-buy"><i class="fas fa-bolt"></i> BUY NOW</button>
+                </div>
             </div>
-            
-            <button class="btn-buy" id="btn-buy"><i class="fas fa-bolt"></i> BUY NOW</button>
 
             <div class="desc-box">
                 <h4>Fabric & Description</h4>
