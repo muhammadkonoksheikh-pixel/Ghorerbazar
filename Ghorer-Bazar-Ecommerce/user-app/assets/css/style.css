@@ -451,3 +451,99 @@ ul {
     .mobile-bottom-nav { display: flex; }
     .product-img-wrapper { height: 260px; }
 }
+
+
+
+
+
+
+/* ==========================================================================
+   Home Page Redesign Updates (Categories & Small Grids)
+   ========================================================================== */
+
+/* 1-Line Horizontal Category List */
+.horizontal-category-list {
+    display: flex;
+    overflow-x: auto;
+    gap: 25px;
+    padding: 10px 5px 20px 5px;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    scroll-behavior: smooth;
+}
+.horizontal-category-list::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+.cat-item-small {
+    flex: 0 0 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.cat-item-small:hover { transform: translateY(-5px); }
+
+.cat-item-small .cat-img-box {
+    width: 90px; 
+    height: 90px; 
+    border-radius: 50%;
+    background: var(--white); 
+    box-shadow: var(--shadow-md);
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    overflow: hidden; 
+    border: 2px solid transparent; 
+    transition: var(--transition);
+    margin-bottom: 12px;
+}
+
+.cat-item-small:hover .cat-img-box { 
+    border-color: var(--primary-color); 
+    box-shadow: var(--shadow-lg); 
+}
+
+.cat-item-small img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+}
+
+.cat-item-small span { 
+    font-size: 0.85rem; 
+    font-weight: 600; 
+    color: var(--text-main); 
+    text-align: center; 
+    text-transform: uppercase; 
+    line-height: 1.2;
+}
+
+/* Small Product Grid (For Exactly 4 New Arrivals) */
+.small-product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+/* Overriding product card specifically inside the small grid */
+.small-product-grid .product-img-wrapper { height: 260px; }
+.small-product-grid .product-title { font-size: 1.05rem; margin-bottom: 8px; }
+.small-product-grid .new-price { font-size: 1.15rem; }
+.small-product-grid .btn-add-cart { padding: 10px; font-size: 0.85rem; }
+
+/* Responsive Adjustments for Mobile */
+@media (max-width: 992px) {
+    .small-product-grid { grid-template-columns: repeat(2, 1fr); gap: 15px;}
+    .small-product-grid .product-img-wrapper { height: 220px; }
+}
+
+@media (max-width: 576px) {
+    .horizontal-category-list { gap: 15px; }
+    .cat-item-small { flex: 0 0 85px; }
+    .cat-item-small .cat-img-box { width: 75px; height: 75px; }
+    .cat-item-small span { font-size: 0.75rem; }
+    
+    .small-product-grid .product-img-wrapper { height: 180px; }
+    .small-product-grid .product-title { font-size: 0.95rem; }
+}
