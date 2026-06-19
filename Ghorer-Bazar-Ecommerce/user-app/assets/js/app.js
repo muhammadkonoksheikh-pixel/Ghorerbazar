@@ -7,12 +7,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadCategories(),
             loadBanners(),
             loadFeaturedProducts(),
-            loadLatestProducts() // Modified for Auto Slider
+            loadLatestProducts() 
         ]);
     }
 });
 
-// 1. Categories
 async function loadCategories() {
     const container = document.getElementById('categories-container');
     if (!container) return;
@@ -30,10 +29,9 @@ async function loadCategories() {
                 </div>`;
         });
         container.innerHTML = html || '<p>No collections found.</p>';
-    } catch (e) { console.error(e); container.innerHTML = ''; }
+    } catch (e) { console.error("Categories error:", e); container.innerHTML = ''; }
 }
 
-// 2. Banner Slider
 async function loadBanners() {
     const container = document.getElementById('hero-slider-container');
     if (!container) return;
@@ -81,7 +79,7 @@ async function loadBanners() {
     } catch (e) { console.error(e); }
 }
 
-// Generates Product Card HTML (Added isSwiperSlide parameter)
+// Generates Product Card HTML (Added Buy Now & Add to Bag Buttons)
 function generateProductCard(id, data, isSwiperSlide = false) {
     const discount = data.oldPrice ? Math.round(((data.oldPrice - data.price) / data.oldPrice) * 100) : 0;
     const badgeHTML = discount > 0 ? `<div class="product-badge">-${discount}%</div>` : '';
@@ -113,16 +111,21 @@ function generateProductCard(id, data, isSwiperSlide = false) {
                     <span class="new-price">৳${data.price}</span>
                     ${data.oldPrice ? `<span class="old-price">৳${data.oldPrice}</span>` : ''}
                 </div>
+                
+                <!-- NEW: Dual Action Buttons for Ads Conversions -->
                 <div class="product-actions">
                     <button class="btn-add-cart" onclick="window.location.href='product.html?id=${id}'">
-                        <i class="fas fa-sliders-h"></i> View Options
+                        <i class="fas fa-shopping-bag"></i> Bag
+                    </button>
+                    <button class="btn-buy-card" onclick="window.location.href='product.html?id=${id}'">
+                        Buy Now
                     </button>
                 </div>
+
             </div>
         </div>`;
 }
 
-// 3. Trending Apparels (Grid view, 20 items max)
 async function loadFeaturedProducts() {
     const c = document.getElementById('featured-products-container'); 
     if(!c) return;
@@ -132,32 +135,26 @@ async function loadFeaturedProducts() {
     } catch(e){ console.error(e); }
 }
 
-// 4. New Arrivals (Swiper Slider, 15 items max, shows 3 at a time sliding every 5 seconds)
 async function loadLatestProducts() {
     const c = document.getElementById('latest-products-container'); 
     if(!c) return;
     try{
         const s = await getDocs(query(collection(db,"products"), orderBy("createdAt","desc"), limit(15)));
         let h=''; 
-        // Pass "true" as the third parameter to add 'swiper-slide' class to the card
         s.forEach(doc => h += generateProductCard(doc.id, doc.data(), true)); 
         c.innerHTML=h;
 
-        // Initialize Auto-Slider for New Arrivals
         new Swiper(".newArrivalsSwiper", {
-            slidesPerView: 2, // Shows 2 on mobile
+            slidesPerView: 2, 
             spaceBetween: 15,
             loop: true,
             observer: true,
             observeParents: true,
-            autoplay: { 
-                delay: 5000, // 5 seconds delay as requested
-                disableOnInteraction: false 
-            },
+            autoplay: { delay: 5000, disableOnInteraction: false },
             pagination: { el: ".swiper-pagination", clickable: true },
             breakpoints: {
-                768: { slidesPerView: 3, spaceBetween: 20 }, // Shows 3 on Tablet/Desktop
-                1024: { slidesPerView: 4, spaceBetween: 30 } // Shows 4 on Large Desktop
+                768: { slidesPerView: 3, spaceBetween: 20 },
+                1024: { slidesPerView: 4, spaceBetween: 30 } 
             }
         });
 
