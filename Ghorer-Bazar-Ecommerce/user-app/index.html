@@ -68,10 +68,9 @@
     <!-- Main Content -->
     <main>
         <!-- Hero Slider Section -->
-        <section class="hero-section">
+        <section class="hero-section" style="margin-bottom: 10px;">
             <div class="swiper heroSwiper">
                 <div class="swiper-wrapper" id="hero-slider-container">
-                    <!-- Dynamic Banners loaded here -->
                     <div class="swiper-slide skeleton-banner"></div>
                 </div>
                 <div class="swiper-button-next"></div>
@@ -80,15 +79,14 @@
             </div>
         </section>
 
-        <!-- Categories Section (Updated to 1 Line Horizontal) -->
-        <section class="section categories-section" style="padding-top: 10px; padding-bottom: 20px;">
+        <!-- Categories Section (Smaller to show products instantly) -->
+        <section class="section categories-section">
             <div class="container">
-                <div class="section-header" style="margin-bottom: 20px;">
+                <div class="section-header" style="margin-bottom: 15px;">
                     <h3>Shop By Category</h3>
                 </div>
-                <!-- Changed class to horizontal-category-list -->
                 <div class="horizontal-category-list" id="categories-container">
-                    <!-- Skeletons for UI loading -->
+                    <!-- Skeletons -->
                     <div class="cat-item-small"><div class="cat-img-box skeleton-category" style="height:100%; border-radius:50%;"></div></div>
                     <div class="cat-item-small"><div class="cat-img-box skeleton-category" style="height:100%; border-radius:50%;"></div></div>
                     <div class="cat-item-small"><div class="cat-img-box skeleton-category" style="height:100%; border-radius:50%;"></div></div>
@@ -97,13 +95,13 @@
             </div>
         </section>
 
-        <!-- Featured Products (Trending Apparels - Many Products) -->
-        <section class="section featured-section" style="padding-top: 20px;">
+        <!-- Featured Products (Trending Apparels) -->
+        <section class="section featured-section">
             <div class="container">
                 <div class="section-header">
                     <h3>Trending Apparels</h3>
                 </div>
-                <!-- Normal Grid for many products -->
+                <!-- 20 Products Grid -->
                 <div class="product-grid" id="featured-products-container">
                     <div class="skeleton-card"></div>
                     <div class="skeleton-card"></div>
@@ -116,20 +114,24 @@
             </div>
         </section>
 
-        <!-- Latest Products (New Arrivals - Exactly 4 Small Products) -->
-        <section class="section latest-section" style="background: #fdfdfd;">
+        <!-- Latest Products (New Arrivals - 3 Item Auto Slider) -->
+        <section class="section latest-section" style="background: #fdfdfd; padding-bottom: 60px;">
             <div class="container">
                 <div class="section-header">
                     <h3>New Arrivals</h3>
                     <a href="category.html" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
                 </div>
-                <!-- Changed class to small-product-grid -->
-                <div class="small-product-grid" id="latest-products-container">
-                    <div class="skeleton-card" style="height: 250px;"></div>
-                    <div class="skeleton-card" style="height: 250px;"></div>
-                    <div class="skeleton-card" style="height: 250px;"></div>
-                    <div class="skeleton-card" style="height: 250px;"></div>
+                
+                <!-- Swiper Wrapper for New Arrivals -->
+                <div class="swiper newArrivalsSwiper" style="padding-bottom: 40px;">
+                    <div class="swiper-wrapper" id="latest-products-container">
+                        <div class="swiper-slide skeleton-card" style="height: 300px;"></div>
+                        <div class="swiper-slide skeleton-card" style="height: 300px;"></div>
+                        <div class="swiper-slide skeleton-card" style="height: 300px;"></div>
+                    </div>
+                    <div class="swiper-pagination"></div>
                 </div>
+
             </div>
         </section>
     </main>
