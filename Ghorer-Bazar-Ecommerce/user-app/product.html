@@ -46,10 +46,10 @@
         .qty-controls button { width: 50px; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); font-weight: bold;}
         .qty-controls input { width: 50px; text-align: center; border: none; font-weight: bold; font-size: 1.2rem; outline: none; background: transparent; color: var(--text-main);}
 
-        .btn-add { flex: 1; border: 2px solid var(--text-main); color: var(--text-main); background: #fff; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 1.1rem;}
+        .btn-add { flex: 1; border: 2px solid var(--text-main); color: var(--text-main); background: #fff; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 1.1rem; text-transform: uppercase;}
         .btn-add:hover { background: var(--text-main); color: #fff; }
         
-        .btn-buy { width: 100%; height: 55px; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;}
+        .btn-buy { width: 100%; height: 55px; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase;}
         .btn-buy:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3); }
 
         .desc-box { border-top: 1px solid var(--border-color); padding-top: 25px; margin-top: 30px; }
@@ -71,10 +71,6 @@
             .btn-add, .btn-buy, .qty-controls { flex-basis: 100%; } 
             body { padding-bottom: 60px; } 
         }
-        @media(max-width: 480px) {
-            .main-img-box { height: 350px; }
-            .thumb-img { width: 70px; height: 70px; }
-        }
     </style>
 </head>
 <body>
@@ -82,21 +78,15 @@
     <header class="header">
         <div class="container navbar">
             <div class="logo"><a href="index.html"><h2>Ghorer<span>Bazar</span></h2></a></div>
-            <div class="nav-icons">
-                <a href="cart.html" class="icon-link">
-                    <i class="fas fa-shopping-bag"></i>
-                    <span id="cart-badge" class="badge" style="display:none;">0</span>
-                </a>
-            </div>
+            <div class="nav-icons"><a href="cart.html" class="icon-link"><i class="fas fa-shopping-bag"></i><span id="cart-badge" class="badge" style="display:none;">0</span></a></div>
         </div>
     </header>
 
-    <div id="loading-ui" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; color: var(--text-muted);">
-        <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; margin-bottom: 20px; color: var(--primary-color);"></i>
-        <h3>Unfolding Latest Collection...</h3>
+    <div id="fast-loader" style="text-align:center; padding:50px; font-weight:600; color:#888;">
+        Fetching Details...
     </div>
 
-    <div class="product-page-wrapper" id="content-ui" style="display: none;">
+    <div class="product-page-wrapper" id="fast-content" style="display: none;">
         <div class="premium-gallery">
             <div class="main-img-box"><img id="main-image" src="" alt="Main Fashion Display"></div>
             <div class="thumb-box" id="thumb-container"></div>
@@ -132,11 +122,9 @@
                     <input type="number" id="qty-val" value="1" readonly>
                     <button id="qty-plus"><i class="fas fa-plus" style="font-size:1rem;"></i></button>
                 </div>
-                <!-- Add to bag button -->
-                <button class="btn-add" id="btn-cart"><i class="fas fa-shopping-bag"></i> ADD TO BAG</button>
+                <button class="btn-add" id="btn-cart"><i class="fas fa-shopping-bag"></i> Add To Bag</button>
             </div>
             
-            <!-- BUY NOW BUTTON UPDATED FOR HIGH CONVERSION -->
             <button class="btn-buy" id="btn-buy"><i class="fas fa-bolt"></i> BUY NOW</button>
 
             <div class="desc-box">
