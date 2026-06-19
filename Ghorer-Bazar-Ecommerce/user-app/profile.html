@@ -152,94 +152,50 @@
 <body>
 
     <!-- Header -->
+    <!-- Header & Navbar -->
     <header class="header">
         <div class="container navbar">
-            <div class="logo"><a href="index.html"><h2>Ghorer<span>Bazar</span></h2></a></div>
+            <div class="logo">
+                <a href="index.html">
+                    <h2>Ghorer<span>Bazar</span></h2>
+                </a>
+            </div>
+
+            <div class="search-bar">
+                <form id="search-form" onsubmit="event.preventDefault(); window.location.href=`search.html?q=${encodeURIComponent(document.getElementById('search-input').value.trim())}`;">
+                    <input type="text" id="search-input" placeholder="Search T-shirts, Jeans, Hoodies...">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                </form>
+            </div>
+
             <div class="nav-icons">
-                <a href="index.html" class="icon-link" title="Home"><i class="fas fa-home"></i></a>
-                <a href="cart.html" class="icon-link" title="Cart"><i class="fas fa-shopping-cart"></i></a>
+                <a href="wishlist.html" class="icon-link" title="Wishlist">
+                    <i class="far fa-heart"></i>
+                    <span id="wishlist-badge" class="badge" style="display:none;">0</span>
+                </a>
+                <a href="cart.html" class="icon-link" title="Cart">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span id="cart-badge" class="badge" style="display:none;">0</span>
+                </a>
+                <div class="user-dropdown">
+                    <a href="login.html" class="icon-link" id="user-icon" title="Profile">
+                        <i class="far fa-user"></i>
+                    </a>
+                    <div class="dropdown-content" id="user-dropdown-content" style="display: none;">
+                        <a href="profile.html"><i class="fas fa-user-circle"></i> My Profile</a>
+                        <a href="my-orders.html"><i class="fas fa-box"></i> My Orders</a>
+                        <a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
-    <main class="container profile-section">
-        <!-- Loading State Indicator -->
-        <div id="profile-loading" style="text-align: center; padding: 50px; font-size: 1.2rem; color: var(--primary-color);">
-            <i class="fas fa-spinner fa-spin"></i> Checking authentication state...
-        </div>
-
-        <!-- Logged Out View (Visible only when not logged in) -->
-        <div class="logged-out-card" id="profile-logged-out-container" style="display: none;">
-            <i class="fas fa-user-lock"></i>
-            <h2>Access Denied</h2>
-            <p>Please log in or register to view your account dashboard, profile details, and order history.</p>
-            <div class="logged-out-btns">
-                <a href="login.html" class="btn btn-primary" style="padding: 12px 25px;">Log In</a>
-                <a href="register.html" class="btn btn-outline" style="padding: 12px 25px;">Register</a>
-            </div>
-        </div>
-
-        <!-- Logged In View (Visible only when authenticated) -->
-        <div class="profile-grid" id="profile-logged-in-container" style="display: none;">
-            <!-- Sidebar -->
-            <div class="profile-sidebar">
-                <img src="assets/images/default-avatar.png" alt="Profile" class="profile-photo" id="sidebar-photo" onerror="this.src='https://res.cloudinary.com/dtmvxrmwg/image/upload/v1/users/default-avatar.png'">
-                <h3 id="sidebar-name">Loading...</h3>
-                <p id="sidebar-email">loading@email.com</p>
-                <div class="profile-nav">
-                    <a href="profile.html" class="active"><i class="fas fa-user"></i> Account Details</a>
-                    <a href="my-orders.html"><i class="fas fa-box"></i> My Orders</a>
-                    <a href="wishlist.html"><i class="fas fa-heart"></i> Wishlist</a>
-                    <a href="#" id="profile-logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                </div>
-            </div>
-
-            <!-- Content -->
-            <div class="profile-content">
-                <h2>Account Details</h2>
-                <form id="profile-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" id="prof-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Phone Number</label>
-                            <input type="tel" id="prof-phone" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Email Address (Cannot be changed)</label>
-                        <input type="email" id="prof-email" readonly disabled style="background:#f5f5f5; cursor: not-allowed;">
-                    </div>
-                    
-                    <h3 style="margin: 30px 0 15px; border-bottom: 1px solid #eee; padding-bottom:10px;">Shipping Address</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>District</label>
-                            <input type="text" id="prof-district" placeholder="e.g. Dhaka">
-                        </div>
-                        <div class="form-group">
-                            <label>Upazila / Thana</label>
-                            <input type="text" id="prof-upazila" placeholder="e.g. Dhanmondi">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Detailed Address</label>
-                        <textarea id="prof-address" rows="3" placeholder="House/Road/Area details"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" id="save-profile-btn">Save Changes</button>
-                </form>
-            </div>
-        </div>
-    </main>
-
-    <!-- Mobile Bottom Navigation (Your requested navbar) -->
+    <!-- Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav">
         <a href="index.html"><i class="fas fa-home"></i><span>Home</span></a>
         <a href="category.html"><i class="fas fa-th-large"></i><span>Category</span></a>
-        <a href="cart.html"><i class="fas fa-shopping-cart"></i><span id="mobile-cart-badge" class="badge" style="display: none;">0</span><span>Cart</span></a>
+        <a href="cart.html"><i class="fas fa-shopping-bag"></i><span id="mobile-cart-badge" class="badge" style="display: none;">0</span><span>Cart</span></a>
         <a href="profile.html" class="active"><i class="far fa-user"></i><span>Profile</span></a>
     </nav>
 
