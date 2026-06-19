@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// 1. Categories - Updated for 1-Line Small UI
+// 1. Categories - 1-Line Small UI
 async function loadCategories() {
     const container = document.getElementById('categories-container');
     if (!container) return;
@@ -34,16 +34,17 @@ async function loadCategories() {
     } catch (e) { console.error("Categories error:", e); container.innerHTML = ''; }
 }
 
-// 2. Banner Fix - Initialize Swiper AFTER data injection
+// 2. Banner Fix - Observer True added for dynamic injection
 async function loadBanners() {
     const container = document.getElementById('hero-slider-container');
     if (!container) return;
     try {
         const snapshot = await getDocs(query(collection(db, "banners"), where("isActive", "==", true), orderBy("order", "asc")));
         
+        let html = '';
         if (snapshot.empty) {
-            container.innerHTML = `
-                <div class="swiper-slide hero-slide" style="background-image: url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=1200&auto=format&fit=crop');">
+            html = `
+                <div class="swiper-slide hero-slide" style="background-image: url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1200&auto=format&fit=crop'); background-color: #222;">
                     <div class="hero-content">
                         <h1 style="color:#fff;">New Arrival Extravaganza</h1>
                         <p style="color:#eee;">Discover our trending styles and upgrade your wardrobe today!</p>
@@ -51,11 +52,10 @@ async function loadBanners() {
                     </div>
                 </div>`;
         } else {
-            let html = '';
             snapshot.forEach(doc => {
                 const data = doc.data();
                 html += `
-                    <div class="swiper-slide hero-slide" style="background-image: url('${data.imageUrl}');">
+                    <div class="swiper-slide hero-slide" style="background-image: url('${data.imageUrl}'); background-color: #222;">
                         <div class="hero-content">
                             <h1 style="text-shadow: 2px 2px 8px rgba(0,0,0,0.5);">${data.title}</h1>
                             <p style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5); font-weight: 500;">${data.subtitle}</p>
@@ -63,14 +63,17 @@ async function loadBanners() {
                         </div>
                     </div>`;
             });
-            container.innerHTML = html;
         }
+        
+        container.innerHTML = html;
 
-        // INIT SWIPER HERE (This fixes the banner not showing issue)
+        // INIT SWIPER WITH OBSERVER
         new Swiper(".heroSwiper", { 
             spaceBetween: 0, 
             effect: "fade", 
             loop: true, 
+            observer: true,             // Makes swiper detect new dynamic elements
+            observeParents: true,       // Makes swiper detect new dynamic elements
             autoplay: { delay: 4000, disableOnInteraction: false }, 
             pagination: { el: ".swiper-pagination", clickable: true }, 
             navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" } 
@@ -123,7 +126,7 @@ function generateProductCard(id, data, isSmall = false) {
         </div>`;
 }
 
-// 3. Trending Apparels - Increased to 20 Products
+// 3. Trending Apparels 
 async function loadFeaturedProducts() {
     const c = document.getElementById('featured-products-container'); 
     if(!c) return;
@@ -133,7 +136,7 @@ async function loadFeaturedProducts() {
     } catch(e){ console.error("Featured error:", e); }
 }
 
-// 4. New Arrivals - Limited to Exactly 4 Products
+// 4. New Arrivals
 async function loadLatestProducts() {
     const c = document.getElementById('latest-products-container'); 
     if(!c) return;
