@@ -2,32 +2,25 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { doc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// --- DOM ELEMENTS ---
 const loaderUI = document.getElementById('fast-loader');
 const contentUI = document.getElementById('fast-content');
 const mainImage = document.getElementById('main-image');
 const qtyInput = document.getElementById('qty-val');
 const stockStatusText = document.getElementById('stock-status');
 
-// --- STATE VARIABLES ---
 let currentProduct = null;
 let sessionUser = null;
 let currentQty = 1;
 let selectedColor = null;
 let selectedSize = null;
 
-// Auth check
 onAuthStateChanged(auth, (user) => sessionUser = user);
 
-// Load Product
 const urlParams = new URLSearchParams(window.location.search);
 const productId = urlParams.get('id');
 
-if (!productId) {
-    window.location.href = 'index.html';
-} else {
-    fetchProduct();
-}
+if (!productId) window.location.href = 'index.html';
+else fetchProduct();
 
 async function fetchProduct() {
     try {
@@ -37,9 +30,21 @@ async function fetchProduct() {
         if (docSnap.exists()) {
             currentProduct = { id: docSnap.id, ...docSnap.data() };
             
-            // Failsafe for older products without variants
-            if (!currentProduct.colors) currentProduct.colors = ['Original'];
-            if (!currentProduct.sizes) currentProduct.sizes = { S:10, M:10, L:10, XL:10, XXL:10 };
+            // Format Variants properly mapping new Admin App structure!
+            let formattedVariants = currentProduct.variants || [];
+            
+            // Failsafe if it's an old product without variants
+            if (formattedVariants.length === 0) {
+                let fallbackColors = currentProduct.colors || ['Standard'];
+                if(typeof fallbackColors === 'string') fallbackColors = fallbackColors.split(',');
+                
+                formattedVariants = fallbackColors.map(c => ({
+                    colorName: c.trim(),
+                    imageUrl: (currentProduct.images && currentProduct.images.length > 0) ? currentProduct.images[0] : 'assets/images/placeholder.jpg',
+                    sizes: currentProduct.sizes || { S:10, M:10, L:10, XL:10, XXL:10 }
+                }));
+            }
+            currentProduct.parsedVariants = formattedVariants;
             
             renderProductPage(currentProduct);
         } else {
@@ -52,20 +57,16 @@ async function fetchProduct() {
 }
 
 function renderProductPage(product) {
-    // Instant Display Switch (No loading delay)
     loaderUI.style.display = 'none';
     contentUI.style.display = 'grid';
 
-    // Texts
     document.getElementById('product-category').innerText = product.categoryName || 'Apparel';
     document.getElementById('product-title').innerText = product.name;
     document.getElementById('product-price').innerText = `৳${product.price}`;
     
-    // Discount Logic
     if (product.oldPrice && product.oldPrice > product.price) {
         document.getElementById('product-old-price').innerText = `৳${product.oldPrice}`;
         document.getElementById('product-old-price').style.display = 'inline-block';
-        
         let discountPercent = Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100);
         document.getElementById('product-discount').innerText = `-${discountPercent}%`;
         document.getElementById('product-discount').style.display = 'inline-block';
@@ -73,8 +74,14 @@ function renderProductPage(product) {
 
     document.getElementById('product-desc').innerHTML = (product.description || 'No description').replace(/\n/g, '<br>');
 
-    // Build Gallery Fast
-    let imagesArr = product.images && product.images.length > 0 ? product.images : ['assets/images/placeholder.jpg'];
+    // Build Global Gallery (all images from all variants + extra images)
+    let galleryImages = new Set();
+    if (product.images) product.images.forEach(img => galleryImages.add(img));
+    product.parsedVariants.forEach(v => { if(v.imageUrl) galleryImages.add(v.imageUrl) });
+    
+    let imagesArr = Array.from(galleryImages);
+    if(imagesArr.length === 0) imagesArr = ['assets/images/placeholder.jpg'];
+    
     mainImage.src = imagesArr[0];
     
     let thumbHTML = '';
@@ -87,29 +94,22 @@ function renderProductPage(product) {
     });
     document.getElementById('thumb-container').innerHTML = thumbHTML;
 
-    // Attach click events to thumbs
-    const allThumbs = document.querySelectorAll('.thumb-img');
-    allThumbs.forEach(thumb => {
-        thumb.addEventListener('click', (e) => {
-            allThumbs.forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.thumb-img').forEach(tBox => {
+        tBox.addEventListener('click', (e) => {
+            document.querySelectorAll('.thumb-img').forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
             mainImage.src = e.currentTarget.getAttribute('data-src');
         });
     });
 
     renderColorOptions();
-    renderSizeOptions();
     setupButtons();
 }
 
-// COLORS
 function renderColorOptions() {
-    let colors = currentProduct.colors;
-    if (typeof colors === 'string') colors = colors.split(',').map(c => c.trim());
-    
     let html = '';
-    colors.forEach(col => {
-        if(col) html += `<div class="select-btn color-btn" data-color="${col}">${col}</div>`;
+    currentProduct.parsedVariants.forEach((variant, index) => {
+        html += `<div class="select-btn color-btn" data-idx="${index}">${variant.colorName}</div>`;
     });
     document.getElementById('color-options').innerHTML = html;
 
@@ -117,27 +117,45 @@ function renderColorOptions() {
     btns.forEach(btn => {
         btn.addEventListener('click', (e) => {
             btns.forEach(b => b.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            selectedColor = e.currentTarget.getAttribute('data-color');
+            const targetBtn = e.currentTarget;
+            targetBtn.classList.add('active');
+            
+            const variantIndex = parseInt(targetBtn.getAttribute('data-idx'));
+            const chosenVariant = currentProduct.parsedVariants[variantIndex];
+            
+            selectedColor = chosenVariant.colorName;
             document.getElementById('disp-color-select').innerText = selectedColor;
+            
+            // Switch image dynamically based on chosen color!
+            if (chosenVariant.imageUrl) {
+                mainImage.src = chosenVariant.imageUrl;
+                // Optional: sync active state in thumbnails
+                document.querySelectorAll('.thumb-img').forEach(t => {
+                    t.classList.remove('active');
+                    if(t.getAttribute('data-src') === chosenVariant.imageUrl) t.classList.add('active');
+                });
+            }
+
+            // Render sizes specific to THIS color!
+            selectedSize = null;
+            document.getElementById('disp-size-select').innerText = "Not Selected";
+            renderSizeOptions(chosenVariant.sizes);
+            
             checkStockMessage();
         });
     });
 
-    // Auto-select if only 1 color exists
-    if(btns.length === 1) btns[0].click();
+    if(btns.length > 0) btns[0].click();
 }
 
-// SIZES
-function renderSizeOptions() {
-    const sizeMap = currentProduct.sizes;
+function renderSizeOptions(sizesObj) {
     let html = '';
     const orderedSizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
-    orderedSizes.forEach(s => {
-        const availableStock = parseInt(sizeMap[s] || 0);
+    orderedSizes.forEach(sz => {
+        const availableStock = parseInt(sizesObj[sz] || 0);
         let outStockClass = availableStock <= 0 ? 'out-of-stock' : '';
-        html += `<div class="select-btn size-btn ${outStockClass}" data-size="${s}" data-stock="${availableStock}">${s}</div>`;
+        html += `<div class="select-btn size-btn ${outStockClass}" data-size="${sz}" data-stock="${availableStock}">${sz}</div>`;
     });
     document.getElementById('size-options').innerHTML = html;
 
@@ -165,25 +183,28 @@ function renderSizeOptions() {
 
 function checkStockMessage() {
     if (selectedColor && selectedSize) {
-        let maxLimit = parseInt(currentProduct.sizes[selectedSize] || 0);
-        stockStatusText.innerHTML = `<span style="color:var(--success);"><i class="fas fa-check-circle"></i> Item Available (${maxLimit} in stock)</span>`;
+        let variant = currentProduct.parsedVariants.find(v => v.colorName === selectedColor);
+        let maxAvailable = variant ? parseInt(variant.sizes[selectedSize] || 0) : 0;
+        
+        stockStatusText.innerHTML = `<span style="color:var(--success);"><i class="fas fa-check-circle"></i> Excellent! We have ${maxAvailable} available in this combination.</span>`;
     } else {
-        stockStatusText.innerHTML = `<span style="color:#777;"><i class="fas fa-info-circle"></i> Select Size & Color to add to cart</span>`;
+        stockStatusText.innerHTML = `<span style="color:#777;"><i class="fas fa-info-circle"></i> Select Size & Color to add to bag.</span>`;
     }
 }
 
-// ACTIONS
 function setupButtons() {
     document.getElementById('qty-plus').addEventListener('click', () => {
-        if (!selectedSize) {
-            Swal.fire('Oops!', 'Select your Size first!', 'info'); return;
+        if (!selectedSize || !selectedColor) {
+            Swal.fire('Select Options', 'Please select color and size first.', 'info'); return;
         }
-        let maxLimit = parseInt(currentProduct.sizes[selectedSize]);
-        if(currentQty < maxLimit) {
+        let variant = currentProduct.parsedVariants.find(v => v.colorName === selectedColor);
+        let maxLimit = variant ? parseInt(variant.sizes[selectedSize] || 0) : 0;
+
+        if (currentQty < maxLimit) {
             currentQty++;
             qtyInput.value = currentQty;
         } else {
-            Swal.fire('Limit Alert', `Only ${maxLimit} pieces available.`, 'warning');
+            Swal.fire('Limit Alert', `Only ${maxLimit} pieces available for this variant.`, 'warning');
         }
     });
 
@@ -198,17 +219,16 @@ function setupButtons() {
     document.getElementById('btn-buy').addEventListener('click', () => processOrderAddition(true));
 }
 
-// CART ADD PROCESS
 async function processOrderAddition(goToCheckout) {
     if(!sessionUser) {
         Swal.fire({
-            title: 'Please Login', text: 'You must login before adding items to cart.', icon: 'info', confirmButtonText: 'Go to Login'
+            title: 'Please Login', text: 'You must login to proceed.', icon: 'info', confirmButtonText: 'Go to Login'
         }).then(r => { if(r.isConfirmed) window.location.href='login.html'; });
         return;
     }
 
     if(!selectedSize || !selectedColor) {
-        Swal.fire('Select Options', 'Please select both COLOR and SIZE variations!', 'error');
+        Swal.fire('Select Options', 'Please choose both COLOR and SIZE!', 'error');
         return;
     }
 
@@ -226,16 +246,18 @@ async function processOrderAddition(goToCheckout) {
         );
 
         const snapshotData = await getDocs(queryMatches);
-        const imageUrlToSave = (currentProduct.images && currentProduct.images.length > 0) ? currentProduct.images[0] : 'assets/images/placeholder.jpg';
+        
+        let variant = currentProduct.parsedVariants.find(v => v.colorName === selectedColor);
+        const imageUrlToSave = variant.imageUrl || (currentProduct.images ? currentProduct.images[0] : 'assets/images/placeholder.jpg');
 
         if (!snapshotData.empty) {
             let activeDoc = snapshotData.docs[0];
             let newTotalQty = activeDoc.data().quantity + currentQty;
             
-            const limit = parseInt(currentProduct.sizes[selectedSize]);
+            const limit = parseInt(variant.sizes[selectedSize]);
             if(newTotalQty > limit) {
-                Swal.fire('Maxed Out!', `Cannot add more. Limit is ${limit} pieces!`, 'warning');
-                document.getElementById(btnId).innerHTML = goToCheckout ? 'BUY NOW' : 'ADD TO BAG';
+                Swal.fire('Limit Error!', `Cannot add more. Limit is ${limit} pieces!`, 'warning');
+                document.getElementById(btnId).innerHTML = goToCheckout ? '<i class="fas fa-bolt"></i> BUY NOW' : '<i class="fas fa-shopping-bag"></i> ADD TO BAG';
                 document.getElementById(btnId).disabled = false;
                 return;
             }
@@ -259,7 +281,7 @@ async function processOrderAddition(goToCheckout) {
             window.location.href = 'cart.html';
         } else {
             Swal.fire({
-                icon: 'success', title: 'Added to Bag!', html: `Size: <b>${selectedSize}</b> | Color: <b>${selectedColor}</b>`, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
+                icon: 'success', title: 'Added to Bag!', html: `Color: <b>${selectedColor}</b> | Size: <b>${selectedSize}</b>`, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
             });
             document.getElementById(btnId).innerHTML = '<i class="fas fa-shopping-bag"></i> ADD TO BAG';
             document.getElementById(btnId).disabled = false;
@@ -267,7 +289,7 @@ async function processOrderAddition(goToCheckout) {
 
     } catch(err) {
         console.error(err);
-        Swal.fire("Add Process Failed", err.message, "error");
+        Swal.fire("Failed", err.message, "error");
         document.getElementById(goToCheckout ? 'btn-buy' : 'btn-cart').disabled = false;
     }
 }
