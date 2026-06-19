@@ -3,15 +3,17 @@ import { collection, getDocs, query, where, orderBy, limit } from "https://www.g
 
 document.addEventListener('DOMContentLoaded', async () => {
     if (document.getElementById('categories-container')) {
-        await loadCategories();
-        await loadBanners();
-        await loadFlashSale();
-        await loadFeaturedProducts();
-        await loadLatestProducts();
+        // Parallel fetching for faster load
+        Promise.all([
+            loadCategories(),
+            loadBanners(),
+            loadFeaturedProducts(),
+            loadLatestProducts()
+        ]);
     }
 });
 
-// Load Categories
+// 1. Categories - Updated for 1-Line Small UI
 async function loadCategories() {
     const container = document.getElementById('categories-container');
     if (!container) return;
@@ -21,21 +23,24 @@ async function loadCategories() {
         snapshot.forEach(doc => {
             const data = doc.data();
             html += `
-                <div class="category-card" onclick="window.location.href='category.html?id=${doc.id}'" data-aos="zoom-in">
-                    <img src="${data.image || 'assets/images/placeholder.jpg'}" alt="${data.name}" class="category-img">
-                    <h4>${data.name}</h4>
+                <div class="cat-item-small" onclick="window.location.href='category.html?id=${doc.id}'">
+                    <div class="cat-img-box">
+                        <img src="${data.image || 'assets/images/placeholder.jpg'}" alt="${data.name}">
+                    </div>
+                    <span>${data.name}</span>
                 </div>`;
         });
         container.innerHTML = html || '<p>No collections found.</p>';
-    } catch (e) { container.innerHTML = ''; }
+    } catch (e) { console.error("Categories error:", e); container.innerHTML = ''; }
 }
 
-// Load Hero Banners (Fallback Updated to Fashion Theme)
+// 2. Banner Fix - Initialize Swiper AFTER data injection
 async function loadBanners() {
     const container = document.getElementById('hero-slider-container');
     if (!container) return;
     try {
         const snapshot = await getDocs(query(collection(db, "banners"), where("isActive", "==", true), orderBy("order", "asc")));
+        
         if (snapshot.empty) {
             container.innerHTML = `
                 <div class="swiper-slide hero-slide" style="background-image: url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=1200&auto=format&fit=crop');">
@@ -60,17 +65,35 @@ async function loadBanners() {
             });
             container.innerHTML = html;
         }
-        new Swiper(".heroSwiper", { spaceBetween:30, effect:"fade", loop:true, autoplay:{delay:4000, disableOnInteraction:false}, pagination:{el:".swiper-pagination",clickable:true}, navigation:{nextEl:".swiper-button-next", prevEl:".swiper-button-prev"} });
-    } catch (e) { }
+
+        // INIT SWIPER HERE (This fixes the banner not showing issue)
+        new Swiper(".heroSwiper", { 
+            spaceBetween: 0, 
+            effect: "fade", 
+            loop: true, 
+            autoplay: { delay: 4000, disableOnInteraction: false }, 
+            pagination: { el: ".swiper-pagination", clickable: true }, 
+            navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" } 
+        });
+
+    } catch (e) {
+        console.error("Banner error:", e);
+    }
 }
 
-// Global Products UI Structure (Updated "Add to Cart" to "Select Options" to enforce size picking)
-function generateProductCard(id, data, isSwiperSlide = false) {
+// General Product Card Generator
+function generateProductCard(id, data, isSmall = false) {
     const discount = data.oldPrice ? Math.round(((data.oldPrice - data.price) / data.oldPrice) * 100) : 0;
     const badgeHTML = discount > 0 ? `<div class="product-badge">-${discount}%</div>` : '';
-    const imgUrl = data.images && data.images.length > 0 ? data.images[0] : 'assets/images/placeholder.jpg';
+    let imgUrl = 'assets/images/placeholder.jpg';
     
-    // Quick stock checking for card logic (Sum of sizes if they exist, or normal stock check)
+    // Check variant images first, then fallback to standard images
+    if (data.variants && data.variants.length > 0 && data.variants[0].imageUrl) {
+        imgUrl = data.variants[0].imageUrl;
+    } else if (data.images && data.images.length > 0) {
+        imgUrl = data.images[0];
+    }
+    
     let totalStock = 0;
     if(data.sizes) {
         totalStock = (data.sizes.S || 0) + (data.sizes.M || 0) + (data.sizes.L || 0) + (data.sizes.XL || 0) + (data.sizes.XXL || 0);
@@ -78,7 +101,7 @@ function generateProductCard(id, data, isSwiperSlide = false) {
     const outOfStockLabel = (totalStock === 0 && data.sizes) ? `<div style="color:var(--danger); font-size:0.8rem; font-weight:700;">SOLD OUT</div>` : '';
 
     return `
-        <div class="${isSwiperSlide ? 'swiper-slide' : ''} product-card" data-aos="fade-up">
+        <div class="product-card" data-aos="fade-up">
             ${badgeHTML}
             <div class="product-img-wrapper" onclick="window.location.href='product.html?id=${id}'">
                 <img src="${imgUrl}" alt="${data.name}" class="product-img" loading="lazy">
@@ -100,29 +123,22 @@ function generateProductCard(id, data, isSwiperSlide = false) {
         </div>`;
 }
 
-// Fetchers (Same exact queries as before but invoking new design)
-async function loadFlashSale() {
-    const c = document.getElementById('flash-products-container');
-    if (!c) return;
-    try {
-        const s = await getDocs(query(collection(db,"products"), where("isFlashSale","==",true), limit(6)));
-        if (s.empty) { document.querySelector('.flash-sale-section').style.display='none'; return; }
-        let h = ''; s.forEach(doc => h += generateProductCard(doc.id, doc.data(), true));
-        c.innerHTML = h;
-        new Swiper(".flashSwiper", { slidesPerView:1, spaceBetween:10, breakpoints:{640:{slidesPerView:2, spaceBetween:20},768:{slidesPerView:3, spaceBetween:30},1024:{slidesPerView:4, spaceBetween:30}}});
-    } catch(e){}
-}
+// 3. Trending Apparels - Increased to 20 Products
 async function loadFeaturedProducts() {
-    const c = document.getElementById('featured-products-container'); if(!c) return;
+    const c = document.getElementById('featured-products-container'); 
+    if(!c) return;
     try {
-        const s = await getDocs(query(collection(db,"products"), where("isFeatured","==",true), limit(8)));
-        let h=''; s.forEach(doc=>h+=generateProductCard(doc.id, doc.data())); c.innerHTML=h;
-    }catch(e){}
+        const s = await getDocs(query(collection(db,"products"), where("isFeatured","==",true), limit(20)));
+        let h=''; s.forEach(doc => h += generateProductCard(doc.id, doc.data(), false)); c.innerHTML=h;
+    } catch(e){ console.error("Featured error:", e); }
 }
+
+// 4. New Arrivals - Limited to Exactly 4 Products
 async function loadLatestProducts() {
-    const c = document.getElementById('latest-products-container'); if(!c) return;
+    const c = document.getElementById('latest-products-container'); 
+    if(!c) return;
     try{
-        const s = await getDocs(query(collection(db,"products"), orderBy("createdAt","desc"), limit(12)));
-        let h=''; s.forEach(doc=>h+=generateProductCard(doc.id, doc.data())); c.innerHTML=h;
-    }catch(e){}
+        const s = await getDocs(query(collection(db,"products"), orderBy("createdAt","desc"), limit(4)));
+        let h=''; s.forEach(doc => h += generateProductCard(doc.id, doc.data(), true)); c.innerHTML=h;
+    } catch(e){ console.error("Latest error:", e); }
 }
