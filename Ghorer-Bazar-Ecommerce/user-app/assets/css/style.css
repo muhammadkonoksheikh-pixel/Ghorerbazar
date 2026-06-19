@@ -588,3 +588,61 @@ ul {
 .featured-section {
     padding-top: 10px !important;
 }
+
+
+
+
+/* ==========================================================================
+   Dual Buttons for Product Cards (Add to Bag & Buy Now)
+   ========================================================================== */
+.product-actions { 
+    display: flex; 
+    gap: 8px; 
+    width: 100%; 
+    margin-top: 10px;
+}
+
+.btn-add-cart { 
+    flex: 1; 
+    background: transparent; 
+    border: 1.5px solid var(--text-main); 
+    color: var(--text-main); 
+    padding: 8px 5px; 
+    border-radius: 6px; 
+    font-weight: 700; 
+    cursor: pointer; 
+    transition: 0.3s; 
+    text-transform: uppercase; 
+    font-size: 0.8rem; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 5px;
+}
+.btn-add-cart:hover { background: rgba(0,0,0,0.05); }
+
+.btn-buy-card { 
+    flex: 1; 
+    background: var(--primary-color); 
+    border: 1.5px solid var(--primary-color); 
+    color: #fff; 
+    padding: 8px 5px; 
+    border-radius: 6px; 
+    font-weight: 700; 
+    cursor: pointer; 
+    transition: 0.3s; 
+    text-transform: uppercase; 
+    font-size: 0.8rem; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 5px;
+}
+.btn-buy-card:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2); 
+}
+
+/* Update Product details page Buy Now text */
+.btn-buy { text-transform: uppercase; letter-spacing: 1px;}
