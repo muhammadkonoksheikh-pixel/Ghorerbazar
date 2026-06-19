@@ -5,24 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ghorer Bazar - Premium Clothing Brand</title>
     
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- AOS Animation -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    
-    <!-- Swiper CSS (For Sliders) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
-    
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
-    <!-- Page Loader (Spinner) -->
+    <!-- Page Loader -->
     <div id="page-loader" class="loader-container">
         <div class="spinner"></div>
     </div>
@@ -89,64 +80,31 @@
             </div>
         </section>
 
-        <!-- Categories Section -->
-        <section class="section categories-section" data-aos="fade-up">
+        <!-- Categories Section (Updated to 1 Line Horizontal) -->
+        <section class="section categories-section" style="padding-top: 10px; padding-bottom: 20px;">
             <div class="container">
-                <div class="section-header">
-                    <h3>Top Collections</h3>
-                    <a href="category.html" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+                <div class="section-header" style="margin-bottom: 20px;">
+                    <h3>Shop By Category</h3>
                 </div>
-                <div class="categories-grid" id="categories-container">
-                    <div class="skeleton-category"></div>
-                    <div class="skeleton-category"></div>
-                    <div class="skeleton-category"></div>
-                    <div class="skeleton-category"></div>
+                <!-- Changed class to horizontal-category-list -->
+                <div class="horizontal-category-list" id="categories-container">
+                    <!-- Skeletons for UI loading -->
+                    <div class="cat-item-small"><div class="cat-img-box skeleton-category" style="height:100%; border-radius:50%;"></div></div>
+                    <div class="cat-item-small"><div class="cat-img-box skeleton-category" style="height:100%; border-radius:50%;"></div></div>
+                    <div class="cat-item-small"><div class="cat-img-box skeleton-category" style="height:100%; border-radius:50%;"></div></div>
+                    <div class="cat-item-small"><div class="cat-img-box skeleton-category" style="height:100%; border-radius:50%;"></div></div>
                 </div>
             </div>
         </section>
 
-        <!-- Flash Sale Section -->
-        <section class="section flash-sale-section" data-aos="fade-up">
-            <div class="container">
-                <div class="section-header flash-header">
-                    <div class="flash-title">
-                        <h3><i class="fas fa-bolt" style="color: #ffc107;"></i> Super Deal</h3>
-                        <div class="countdown" id="flash-countdown">
-                            <span id="hours">00</span> : <span id="minutes">00</span> : <span id="seconds">00</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="swiper flashSwiper">
-                    <div class="swiper-wrapper" id="flash-products-container">
-                        <div class="swiper-slide skeleton-card"></div>
-                        <div class="swiper-slide skeleton-card"></div>
-                        <div class="swiper-slide skeleton-card"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Featured Products -->
-        <section class="section featured-section" data-aos="fade-up">
+        <!-- Featured Products (Trending Apparels - Many Products) -->
+        <section class="section featured-section" style="padding-top: 20px;">
             <div class="container">
                 <div class="section-header">
                     <h3>Trending Apparels</h3>
                 </div>
+                <!-- Normal Grid for many products -->
                 <div class="product-grid" id="featured-products-container">
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Latest Products -->
-        <section class="section latest-section" data-aos="fade-up">
-            <div class="container">
-                <div class="section-header">
-                    <h3>New Arrivals</h3>
-                </div>
-                <div class="product-grid" id="latest-products-container">
                     <div class="skeleton-card"></div>
                     <div class="skeleton-card"></div>
                     <div class="skeleton-card"></div>
@@ -154,6 +112,23 @@
                 </div>
                 <div class="load-more-container">
                     <a href="category.html" class="btn btn-outline">Explore More Styles</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Latest Products (New Arrivals - Exactly 4 Small Products) -->
+        <section class="section latest-section" style="background: #fdfdfd;">
+            <div class="container">
+                <div class="section-header">
+                    <h3>New Arrivals</h3>
+                    <a href="category.html" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <!-- Changed class to small-product-grid -->
+                <div class="small-product-grid" id="latest-products-container">
+                    <div class="skeleton-card" style="height: 250px;"></div>
+                    <div class="skeleton-card" style="height: 250px;"></div>
+                    <div class="skeleton-card" style="height: 250px;"></div>
+                    <div class="skeleton-card" style="height: 250px;"></div>
                 </div>
             </div>
         </section>
@@ -170,7 +145,6 @@
                     <a href="#"><i class="fab fa-youtube"></i></a>
                 </div>
             </div>
-            <!-- Standard Footer Links preserved here (Contact, Tracker etc. as generated before) -->
             <div class="footer-col">
                 <h4>Quick Links</h4>
                 <ul><li><a href="#">About Us</a></li><li><a href="#">Contact Us</a></li><li><a href="#">Return Policy</a></li></ul>
